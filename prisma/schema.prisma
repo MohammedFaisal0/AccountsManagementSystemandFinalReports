@@ -1,0 +1,279 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL") // Placeholder, user needs to configure this in .env
+}
+
+// --- Core Entities ---
+
+model User {
+  user_id     Int      @id @default(autoincrement())
+  name        String?
+  email       String   @unique
+  password_hash String
+  phone       String?  @db.VarChar(20) // Specify length if needed
+  avatar_url  String?
+  role        String   @default("employee") // administrator, employee, reviewer
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  uploadedFiles ImportedFile[]
+  assignedTasks Task[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Directorate {
+  directorate_id Int      @id @default(autoincrement())
+  name           String   @unique
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relations
+  offices       Office[]
+  importedFiles ImportedFile[]
+
+  @@map("directorates")
+}
+
+model Office {
+  office_id      Int      @id @default(autoincrement())
+  name           String
+  directorate_id Int
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relations
+  directorate        Directorate            @relation(fields: [directorate_id], references: [directorate_id])
+  financialDataEntries FinancialDataEntry[]
+
+  @@unique([name, directorate_id])
+  @@map("offices")
+}
+
+// --- Revenue Hierarchy ---
+model RevenueChapter {
+  chapter_id Int      @id @default(autoincrement())
+  code       String   @unique
+  name       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  sections RevenueSection[]
+
+  @@map("revenue_chapters")
+}
+
+model RevenueSection {
+  section_id Int      @id @default(autoincrement())
+  code       String
+  name       String
+  chapter_id Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  chapter RevenueChapter @relation(fields: [chapter_id], references: [chapter_id])
+  items   RevenueItem[]
+
+  @@unique([code, chapter_id])
+  @@map("revenue_sections")
+}
+
+model RevenueItem {
+  item_id    Int      @id @default(autoincrement())
+  code       String
+  name       String
+  section_id Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  section RevenueSection @relation(fields: [section_id], references: [section_id])
+  types   RevenueType[]
+
+  @@unique([code, section_id])
+  @@map("revenue_items")
+}
+
+model RevenueType {
+  type_id    Int      @id @default(autoincrement())
+  code       String
+  name       String
+  item_id    Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  item                 RevenueItem          @relation(fields: [item_id], references: [item_id])
+  financialDataEntries FinancialDataEntry[]
+
+  @@unique([code, item_id])
+  @@map("revenue_types")
+}
+
+// --- Use Hierarchy ---
+model UseChapter {
+  chapter_id Int      @id @default(autoincrement())
+  code       String   @unique
+  name       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  sections UseSection[]
+
+  @@map("use_chapters")
+}
+
+model UseSection {
+  section_id Int      @id @default(autoincrement())
+  code       String
+  name       String
+  chapter_id Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  chapter UseChapter @relation(fields: [chapter_id], references: [chapter_id])
+  items   UseItem[]
+
+  @@unique([code, chapter_id])
+  @@map("use_sections")
+}
+
+model UseItem {
+  item_id    Int      @id @default(autoincrement())
+  code       String
+  name       String
+  section_id Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  section UseSection @relation(fields: [section_id], references: [section_id])
+  types   UseType[]
+
+  @@unique([code, section_id])
+  @@map("use_items")
+}
+
+model UseType {
+  type_id    Int      @id @default(autoincrement())
+  code       String
+  name       String
+  item_id    Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  item                 UseItem              @relation(fields: [item_id], references: [item_id])
+  financialDataEntries FinancialDataEntry[]
+
+  @@unique([code, item_id])
+  @@map("use_types")
+}
+
+// --- Account Types ---
+model AccountType {
+  account_type_id Int      @id @default(autoincrement())
+  name            String   @unique // e.g., Main, Auxiliary Debit, etc.
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  financialDataEntries FinancialDataEntry[]
+
+  @@map("account_types")
+}
+
+// --- File Import & Data ---
+model ImportedFile {
+  file_id            Int      @id @default(autoincrement())
+  file_name          String // Stored file name/path
+  original_file_name String
+  upload_timestamp   DateTime @default(now())
+  user_id            Int
+  directorate_id     Int // File belongs to a directorate
+  month              Int // 1-12
+  year               Int
+  status             String // Uploaded, Processing, Validated, Imported, Rejected
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  user                 User                 @relation(fields: [user_id], references: [user_id])
+  directorate          Directorate          @relation(fields: [directorate_id], references: [directorate_id])
+  financialDataEntries FinancialDataEntry[]
+
+  @@map("imported_files")
+}
+
+model FinancialDataEntry {
+  entry_id               Int      @id @default(autoincrement())
+  imported_file_id     Int
+  office_id            Int // Data entry pertains to a specific office
+  revenue_type_id      Int?
+  use_type_id          Int?
+  account_type_id      Int
+  amount_current_month Decimal  @db.Decimal(15, 2)
+  amount_previous_months Decimal@db.Decimal(15, 2)
+  amount_total         Decimal  @db.Decimal(15, 2)
+  validation_status    String // Valid, Invalid, Pending
+  validation_details   String?
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  // Relations
+  importedFile ImportedFile @relation(fields: [imported_file_id], references: [file_id])
+  office       Office       @relation(fields: [office_id], references: [office_id])
+  revenueType  RevenueType? @relation(fields: [revenue_type_id], references: [type_id])
+  useType      UseType?     @relation(fields: [use_type_id], references: [type_id])
+  accountType  AccountType  @relation(fields: [account_type_id], references: [account_type_id])
+
+  @@map("financial_data_entries")
+}
+
+// --- Supporting Entities ---
+model Task {
+  task_id    Int      @id @default(autoincrement())
+  title      String
+  due_date   DateTime? @db.Date
+  priority   String // High, Medium, Low
+  completed  Boolean  @default(false)
+  user_id    Int? // Assignee
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  assignee User? @relation(fields: [user_id], references: [user_id])
+
+  @@map("tasks")
+}
+
+model Notification {
+  notification_id Int      @id @default(autoincrement())
+  title           String
+  message         String   @db.Text
+  type            String // info, warning, success
+  timestamp       DateTime @default(now())
+  user_id         Int // Recipient
+  is_read         Boolean  @default(false)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  recipient User @relation(fields: [user_id], references: [user_id])
+
+  @@map("notifications")
+}
+

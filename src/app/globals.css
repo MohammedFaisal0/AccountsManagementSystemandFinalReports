@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: #000;
+  --background: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground: #fff;
+    --background: #000;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Cairo', sans-serif;
+}
+
+/* RTL specific styles */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* Custom scrollbar for RTL */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
