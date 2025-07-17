@@ -69,8 +69,8 @@ export default function FileUploader({ onFileUpload, isDisabled = false }: FileU
         {/* Icon Container */}
         <div className={`w-24 h-24 rounded-3xl flex items-center justify-center mb-8 transition-all duration-500 ${
           isDragging 
-            ? 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-2xl scale-110' 
-            : 'bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg'
+            ? 'bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 shadow-2xl scale-110' 
+            : 'bg-gradient-to-b from-gray-100 via-gray-200 to-gray-300 shadow-lg'
         }`}>
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
@@ -145,8 +145,8 @@ export default function FileUploader({ onFileUpload, isDisabled = false }: FileU
           onClick={handleButtonClick}
           className={`mt-8 px-8 py-4 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 ${
             isDragging
-              ? 'bg-blue-600 text-white shadow-xl'
-              : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl'
+              ? 'bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 text-white shadow-xl'
+              : 'bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 text-white shadow-lg hover:shadow-xl'
           } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           disabled={isDisabled}
         >

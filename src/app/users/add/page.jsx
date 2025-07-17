@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 
 export default function AddUserPage() {
   const router = useRouter();
-  const [avatar, setAvatar] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
@@ -19,7 +18,6 @@ export default function AddUserPage() {
     phone: '',
     role: '',
   });
-  const fileInputRef = useRef();
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -27,15 +25,6 @@ export default function AddUserPage() {
       setForm((prev) => ({ ...prev, [name]: checked }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setAvatar(URL.createObjectURL(file));
-    } else {
-      setAvatar(null);
     }
   };
 
@@ -67,10 +56,6 @@ export default function AddUserPage() {
       formData.append('phone', form.phone);
       formData.append('role', form.role);
 
-      if (fileInputRef.current?.files[0]) {
-        formData.append('avatar', fileInputRef.current.files[0]);
-      }
-
       const response = await fetch('/api/users', {
         method: 'POST',
         body: formData,
@@ -96,17 +81,17 @@ export default function AddUserPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <Sidebar />
       <div className="flex-1 overflow-auto">
-        <div className="p-6">
+        <div className="p-4">
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-1">إضافة مستخدم جديد</h1>
-                  <p className="text-sm text-gray-600">أضف مستخدم جديد إلى النظام مع تحديد الدور المناسب</p>
+                  <h1 className="text-xl font-bold text-gray-800 mb-1">إضافة مستخدم جديد</h1>
+                  <p className="text-xs text-gray-600">أضف مستخدم جديد إلى النظام مع تحديد الدور المناسب</p>
                 </div>
                 <div className="flex items-center space-x-3 space-x-reverse">
                   <button
@@ -130,9 +115,6 @@ export default function AddUserPage() {
                   isSubmitting={isSubmitting}
                   error={error}
                   successMessage={successMessage}
-              avatar={avatar}
-              onAvatarChange={handleAvatarChange}
-              fileInputRef={fileInputRef}
                 />
           </div>
         </div>

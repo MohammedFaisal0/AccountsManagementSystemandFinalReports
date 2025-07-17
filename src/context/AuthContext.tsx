@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { usePathname } from 'next/navigation';
 
 // Define the shape of the user object
 interface User {
@@ -28,11 +29,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   // Check if user is logged in on mount
   useEffect(() => {
     const token = Cookies.get('token');
-    if (token) {
+    const userInfo = Cookies.get('userInfo');
+    if (token && userInfo) {
       // Verify token and set user
       fetch('/api/auth/verify', {
         method: 'POST',
@@ -47,10 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(data.user);
           } else {
             Cookies.remove('token');
+            Cookies.remove('userInfo');
           }
         })
         .catch(() => {
           Cookies.remove('token');
+          Cookies.remove('userInfo');
         })
         .finally(() => {
           setLoading(false);
@@ -59,6 +64,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   }, []);
+
+  // Redirect to login if not authenticated and not loading
+  useEffect(() => {
+    if (!loading && !user && pathname !== '/login') {
+      router.push('/login');
+    }
+  }, [loading, user, pathname, router]);
 
   // Login function
   const login = async (email: string, password: string, role?: string): Promise<{ success: boolean; message?: string }> => {
@@ -74,12 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (response.ok && data.token) {
-        // Set token in cookies
+        // Set token and userInfo in cookies
         Cookies.set('token', data.token, { expires: 7 }); // 7 days
-        
+        Cookies.set('userInfo', JSON.stringify(data.user), { expires: 7 });
         // Set user data
         setUser(data.user);
-        
         return { success: true };
       } else {
         return { success: false, message: data.message || 'فشل تسجيل الدخول' };
@@ -102,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       // Remove token and user data
       Cookies.remove('token');
+      Cookies.remove('userInfo');
       setUser(null);
     }
   };

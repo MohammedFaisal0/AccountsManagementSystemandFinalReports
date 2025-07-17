@@ -42,7 +42,7 @@ export default function DateTimeDisplay() {
 
       {/* Time Display */}
       <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 w-full text-center shadow-lg">
+        <div className="bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 rounded-xl p-4 w-full text-center shadow-lg">
           <div className="text-2xl font-bold text-white font-mono tracking-wider mb-2">
             {time}
           </div>
@@ -54,9 +54,9 @@ export default function DateTimeDisplay() {
 
       {/* Additional Info */}
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <div className="bg-blue-50 rounded-lg p-2 text-center">
-          <div className="text-xs text-blue-600 mb-1">اليوم</div>
-          <div className="text-xs font-semibold text-blue-800">
+        <div className="bg-blue-100 rounded-lg p-2 text-center">
+          <div className="text-xs text-blue-700 mb-1">اليوم</div>
+          <div className="text-xs font-semibold text-blue-900">
             {new Date().toLocaleDateString('ar-EG', { weekday: 'long' })}
           </div>
         </div>

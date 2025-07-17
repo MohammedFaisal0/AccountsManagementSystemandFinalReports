@@ -20,7 +20,6 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
         email: true,
         phone: true,
         role: true,
-        avatar_url: true,
         created_at: true,
         updated_at: true,
       },
@@ -47,7 +46,7 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
 
   try {
     const body = await request.json();
-    const { name, email, phone, avatar_url, password, role } = body;
+    const { name, email, phone, password, role } = body;
 
     // Basic validation
     if (!email && !name) {
@@ -58,7 +57,6 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
     if (phone !== undefined) updateData.phone = phone;
-    if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
     if (role !== undefined) {
       // Validate role
       const validRoles = ['administrator', 'employee', 'reviewer'];
@@ -85,7 +83,6 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
         email: true,
         phone: true,
         role: true,
-        avatar_url: true,
         created_at: true,
         updated_at: true,
       },

@@ -95,44 +95,44 @@ function ReportInfoContent() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <Sidebar />
-      <div className="flex-1 p-12 overflow-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-12 max-w-7xl mx-auto">
-          <h1 className="text-3xl font-extrabold text-gray-800 mb-10 text-center">عرض التقرير</h1>
+      <div className="flex-1 p-4 overflow-auto">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 max-w-7xl mx-auto">
+          <h1 className="text-xl font-bold text-gray-800 mb-6 text-center">عرض التقرير</h1>
 
           {isLoading || authLoading ? (
-            <div className="text-center py-20 text-gray-500 text-xl">جاري تحميل بيانات التقرير...</div>
+            <div className="text-center py-12 text-sm text-gray-500">جاري تحميل بيانات التقرير...</div>
           ) : error ? (
-            <div className="w-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+            <div className="w-full bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded relative mb-4" role="alert">
               <strong className="font-bold">خطأ!</strong>
               <span className="block sm:inline"> {error}</span>
             </div>
           ) : reportData ? (
-            <div className="space-y-8 text-right">
+            <div className="space-y-6 text-right">
               {/* Report Header */}
-              <div className="border-b pb-4 mb-6">
-                <h2 className="text-2xl font-bold text-blue-700">{reportData.title}</h2>
-                <p className="text-lg text-gray-600">الفترة: {reportData.period}</p>
-                <p className="text-lg text-gray-600">المديرية/المديريات: {reportData.directorateInfo}</p>
-                <p className="text-sm text-gray-500 mt-2">تاريخ الإنشاء: {new Date(reportData.generatedAt).toLocaleString('ar-EG')}</p>
+              <div className="border-b pb-3 mb-4">
+                <h2 className="text-lg font-bold text-blue-700">{reportData.title}</h2>
+                <p className="text-sm text-gray-600">الفترة: {reportData.period}</p>
+                <p className="text-sm text-gray-600">المديرية/المديريات: {reportData.directorateInfo}</p>
+                <p className="text-xs text-gray-500 mt-1">تاريخ الإنشاء: {new Date(reportData.generatedAt).toLocaleString('ar-EG')}</p>
               </div>
 
               {/* Report Summary */}
-              <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800">ملخص التقرير</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-green-100 p-4 rounded">
-                    <p className="text-green-800 font-medium">إجمالي الإيرادات</p>
-                    <p className="text-2xl font-bold text-green-900">{formatCurrency(reportData.summary.totalRevenue)}</p>
+              <div className="bg-gray-50 rounded-lg shadow-sm">
+                <h3 className="text-sm font-semibold mb-3 text-gray-800">ملخص التقرير</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="bg-green-100 p-3 rounded">
+                    <p className="text-green-800 font-medium text-xs">إجمالي الإيرادات</p>
+                    <p className="text-lg font-bold text-green-900">{formatCurrency(reportData.summary.totalRevenue)}</p>
                   </div>
-                  <div className="bg-red-100 p-4 rounded">
-                    <p className="text-red-800 font-medium">إجمالي المصروفات</p>
-                    <p className="text-2xl font-bold text-red-900">{formatCurrency(reportData.summary.totalExpenses)}</p>
+                  <div className="bg-red-100 p-3 rounded">
+                    <p className="text-red-800 font-medium text-xs">إجمالي المصروفات</p>
+                    <p className="text-lg font-bold text-red-900">{formatCurrency(reportData.summary.totalExpenses)}</p>
                   </div>
-                  <div className="bg-blue-100 p-4 rounded">
-                    <p className="text-blue-800 font-medium">النتيجة الصافية</p>
-                    <p className={`text-2xl font-bold ${reportData.summary.netResult >= 0 ? 'text-blue-900' : 'text-red-900'}`}>
+                  <div className="bg-blue-100 p-3 rounded">
+                    <p className="text-blue-800 font-medium text-xs">النتيجة الصافية</p>
+                    <p className={`text-lg font-bold ${reportData.summary.netResult >= 0 ? 'text-blue-900' : 'text-red-900'}`}>
                       {formatCurrency(reportData.summary.netResult)}
                     </p>
                   </div>
@@ -141,27 +141,27 @@ function ReportInfoContent() {
 
               {/* Report Details Table */}
               <div>
-                <h3 className="text-xl font-semibold mb-4 text-gray-800">تفاصيل التقرير</h3>
+                <h3 className="text-sm font-semibold mb-3 text-gray-800">تفاصيل التقرير</h3>
                 <div className="overflow-x-auto rounded-lg border border-gray-200">
-                  <table className="min-w-full text-right text-lg bg-white">
+                  <table className="min-w-full text-right text-sm bg-white">
                     <thead className="bg-gray-100">
                       <tr>
-                        <th className="py-4 px-6 font-bold text-gray-700">الفئة/البند</th>
-                        <th className="py-4 px-6 font-bold text-gray-700">المبلغ</th>
-                        <th className="py-4 px-6 font-bold text-gray-700">ملاحظات</th>
+                        <th className="py-2 px-3 font-bold text-gray-700 text-xs">الفئة/البند</th>
+                        <th className="py-2 px-3 font-bold text-gray-700 text-xs">المبلغ</th>
+                        <th className="py-2 px-3 font-bold text-gray-700 text-xs">ملاحظات</th>
                       </tr>
                     </thead>
                     <tbody>
                       {reportData.details.map((item, index) => (
                         <tr key={index} className="border-t border-gray-100 hover:bg-gray-50">
-                          <td className="py-4 px-6 text-gray-800 font-medium">{item.category}</td>
-                          <td className="py-4 px-6 text-gray-900 font-mono">{formatCurrency(item.amount)}</td>
-                          <td className="py-4 px-6 text-gray-600">{item.notes || '-'}</td>
+                          <td className="py-2 px-3 text-gray-800 font-medium">{item.category}</td>
+                          <td className="py-2 px-3 text-gray-900 font-mono">{formatCurrency(item.amount)}</td>
+                          <td className="py-2 px-3 text-gray-600">{item.notes || '-'}</td>
                         </tr>
                       ))}
                       {reportData.details.length === 0 && (
                         <tr>
-                          <td colSpan={3} className="text-center py-10 text-gray-500">لا توجد تفاصيل لعرضها.</td>
+                          <td colSpan={3} className="text-center py-6 text-sm text-gray-500">لا توجد تفاصيل لعرضها.</td>
                         </tr>
                       )}
                     </tbody>
@@ -170,14 +170,14 @@ function ReportInfoContent() {
               </div>
 
               {/* Add Print/Export Buttons if needed */}
-              <div className="flex justify-end gap-4 pt-6">
-                  <button onClick={() => window.print()} className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-all duration-200">طباعة</button>
+              <div className="flex justify-end gap-3 pt-4">
+                  <button onClick={() => window.print()} className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition-all duration-200">طباعة</button>
                   {/* Add Export functionality if required */}
               </div>
 
             </div>
           ) : (
-            <div className="text-center py-20 text-gray-500 text-xl">لم يتم العثور على بيانات للتقرير المحدد.</div>
+            <div className="text-center py-12 text-sm text-gray-500">لم يتم العثور على بيانات للتقرير المحدد.</div>
           )}
         </div>
       </div>
@@ -188,7 +188,7 @@ function ReportInfoContent() {
 // Use Suspense to handle client-side data fetching with searchParams
 export default function ReportInfoPage() {
   return (
-    <Suspense fallback={<div className="flex h-screen items-center justify-center text-xl">Loading Report...</div>}>
+    <Suspense fallback={<div className="flex h-screen items-center justify-center text-sm">Loading Report...</div>}>
       <ReportInfoContent />
     </Suspense>
   );

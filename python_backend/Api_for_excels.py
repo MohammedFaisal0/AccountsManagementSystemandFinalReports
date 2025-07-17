@@ -1,10 +1,12 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 import os
-from reading_Excel import read_accounts_from_excel
+import requests # Import requests library for HTTP calls
+from reading_Excel import read_accounts_from_excel, excel_to_json
 from dics_of_ExcelCells import reading_first_sheet
-# from dics_of_ExcelCells import excel_to_json
 import traceback
+import datetime
+import pandas as pd # Import pandas for get_directorate_name
 
 app = FastAPI()
 
@@ -20,6 +22,9 @@ app.add_middleware(
 # Create temporary upload directory
 UPLOAD_DIR = "temp_uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# URL for the Next.js API endpoint to receive processed data
+NEXTJS_API_URL = os.getenv("NEXTJS_API_URL", "http://localhost:3000/api/data/process") # Default for local development
 
 # Sheet mapping dictionary
 MONTHS_SHEET_MAPPING = {
@@ -73,6 +78,19 @@ MONTHS_SHEET_MAPPING = {
     }
 }
 
+# Helper function to get directorate name from Excel file
+def get_directorate_name(file_path):
+    try:
+        # Read the first sheet of the Excel file
+        df = pd.read_excel(file_path, sheet_name=0, header=None, engine='openpyxl')
+        # Assuming directorate name is in cell (1, 2) based on 10.xlsx
+        # Adjust row and column for 0-based indexing
+        directorate = df.iloc[1, 2] # Row 2, Column 3 (C2)
+        return str(directorate).replace('مديرية:', '').strip()
+    except Exception as e:
+        print(f"Error extracting directorate name: {e}")
+        return None
+
 @app.post("/process-excel/")
 async def process_excel(
     file: UploadFile = File(...),
@@ -116,34 +134,53 @@ async def process_excel(
         with open(file_path, "wb") as buffer:
             buffer.write(await file.read())
 
-        try:
-            # Process based on sheet number
-            if sheet_number == 1:
-                json_data = reading_first_sheet(
-                     excel_file_path=file_path,
-                     sheet_num=actual_sheet_index
-                )
-                result = {
-                    "json_data": json_data,
-                }
-            else:
-                result = read_accounts_from_excel(
-                    file_path=file_path,
-                    sheet_name=actual_sheet_index
-                )
+        # Extract directorate name and year from the Excel file
+        directorate_name = get_directorate_name(file_path)
+        current_year = datetime.datetime.now().year # Assuming current year for now
+        
+        processed_data = None
+        if sheet_number == 1:
+            # For sheet 1, reading_first_sheet returns the hierarchical structure
+            processed_data = reading_first_sheet(
+                 excel_file_path=file_path,
+                 sheet_num=actual_sheet_index
+            )
+        else: # sheet_number == 2
+            # For sheet 2, read_accounts_from_excel returns financial accounts data
+            processed_data = read_accounts_from_excel(
+                file_path=file_path,
+                sheet_name=actual_sheet_index
+            )
 
-            return {
-                "status": "success",
-                "sheet_number": sheet_number,
-                "month": month,
-                "actual_sheet_index": actual_sheet_index,
-                "data": result
-            }
+        # Prepare data to send to Next.js API
+        payload = {
+            "file_name": file.filename,
+            "month": month,
+            "year": str(current_year),
+            "directorate_name": directorate_name,
+            "sheet_number_processed": sheet_number,
+            "processed_data": processed_data
+        }
 
-        finally:
-            if os.path.exists(file_path):
-                os.remove(file_path)
+        # Send data to Next.js API
+        response = requests.post(NEXTJS_API_URL, json=payload)
+        response.raise_for_status() # Raise an exception for HTTP errors (4xx or 5xx)
 
+        return {
+            "status": "success",
+            "message": "File processed and data sent to Next.js API successfully",
+            "sheet_number": sheet_number,
+            "month": month,
+            "actual_sheet_index": actual_sheet_index,
+            "data_sent": payload # Optionally return the payload sent
+        }
+
+    except requests.exceptions.RequestException as e:
+        print(f"[ERROR] Failed to send data to Next.js API: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send data to Next.js API: {str(e)}"
+        )
     except Exception as e:
         print("[EXCEPTION] Exception occurred in /process-excel endpoint:")
         traceback.print_exc()
@@ -151,6 +188,9 @@ async def process_excel(
             status_code=500,
             detail=f"Error processing file: {str(e)}"
         )
+    # finally:
+    #     if os.path.exists(file_path):
+    #         os.remove(file_path)
 
 # Health check endpoint
 @app.get("/")
@@ -160,3 +200,5 @@ def read_root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+

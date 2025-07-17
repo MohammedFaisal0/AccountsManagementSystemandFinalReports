@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
           email: true,
           phone: true,
           role: true,
-          avatar_url: true,
           created_at: true,
           updated_at: true,
         },
@@ -72,7 +71,6 @@ export async function POST(request: NextRequest) {
     const password = formData.get('password') as string;
     const phone = formData.get('phone') as string;
     const role = formData.get('role') as string;
-    const avatar = formData.get('avatar') as File | null;
 
     // Validate required fields
     if (!name || !email || !password || !role) {
@@ -106,14 +104,6 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Handle avatar upload if provided
-    let avatarUrl = null;
-    if (avatar) {
-      // For now, we'll store a placeholder URL
-      // In a real application, you'd upload to a cloud service like AWS S3
-      avatarUrl = `/uploads/avatars/${Date.now()}-${avatar.name}`;
-    }
-
     // Create user
     const user = await prisma.user.create({
       data: {
@@ -122,7 +112,6 @@ export async function POST(request: NextRequest) {
         password_hash: hashedPassword,
         phone: phone?.trim() || null,
         role: role,
-        avatar_url: avatarUrl,
       },
       select: {
         user_id: true,
@@ -130,7 +119,6 @@ export async function POST(request: NextRequest) {
         email: true,
         phone: true,
         role: true,
-        avatar_url: true,
         created_at: true,
       },
     });

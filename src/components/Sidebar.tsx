@@ -70,16 +70,6 @@ export default function Sidebar() {
       show: hasPermission(PERMISSIONS.VIEW_USERS)
     },
     {
-      label: 'إضافة مستخدم',
-      href: '/add-users',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-      ),
-      show: hasPermission(PERMISSIONS.CREATE_USERS)
-    },
-    {
       label: 'رفع الملفات',
       href: '/import-file',
       icon: (
@@ -102,52 +92,48 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="w-72 bg-gradient-to-b from-blue-600 to-blue-700 text-white p-6 flex flex-col shadow-xl">
-      
-      {/* User Profile Section */}
-      <div className="mb-8 mt-4 flex items-start justify-start">
-        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold text-xl border border-white/30">
-          {getUserInitials()}
-        </div>
-        <div className="mr-3 text-right flex-1">
-          <div className="font-bold text-lg text-white">{getUserDisplayName()}</div>
-          <div className="text-sm text-blue-100">{getUserRole()}</div>
+    <aside className="w-72 min-h-screen bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 rounded-xl shadow-2xl p-6 flex flex-col items-stretch transition-all duration-300">
+      {/* User Info */}
+      <div className="flex flex-col items-center justify-center mt-6 mb-12">
+        <div className="text-center">
+          <div className="font-extrabold text-xl text-white tracking-tight mb-1">{getUserDisplayName()}</div>
+          <div className="text-sm text-blue-200 font-medium">{getUserRole()}</div>
         </div>
       </div>
-      
+
       {/* Navigation Menu */}
-      <nav className="w-full flex flex-col items-end space-y-2 mt-6 flex-1">
-        {menuItems.map((item) => 
+      <nav className="flex flex-col items-end gap-1 flex-1">
+        {menuItems.map((item) =>
           item.show ? (
-            <Link 
+            <Link
               key={item.href}
-              href={item.href} 
-              className="flex items-start justify-start w-full p-3 hover:bg-white/10 rounded-lg text-base group transition-all duration-200"
+              href={item.href}
+              className="group flex items-center w-full px-4 py-3 rounded-lg transition-all duration-200 hover:bg-blue-800/60 focus:bg-blue-900/70 active:bg-blue-900/90 text-base font-medium text-blue-100 hover:text-white focus:text-white mb-1"
             >
-              <div className="w-8 h-8 flex items-center justify-center bg-white/20 rounded-md group-hover:bg-white/30 transition-colors duration-200">
+              <span className="ml-3 flex items-center justify-center w-9 h-9 bg-blue-900/40 rounded-md group-hover:bg-blue-800/70 transition-colors duration-200">
                 {item.icon}
-              </div>
-              <span className="mr-3 font-medium">{item.label}</span>
+              </span>
+              <span className="mr-2">{item.label}</span>
             </Link>
           ) : null
         )}
       </nav>
 
       {/* Logout Button */}
-      <div className="mt-auto pt-6 border-t border-white/20">
+      <div className="mt-8 pt-6 border-t border-blue-800/60">
         <button
           onClick={handleLogout}
-          className="flex items-start justify-start w-full p-3 hover:bg-red-500/20 rounded-lg text-base group transition-all duration-200 text-red-100 hover:text-red-200"
+          className="flex items-center w-full px-4 py-3 rounded-lg transition-all duration-200 hover:bg-red-600/20 focus:bg-red-700/30 active:bg-red-800/40 text-base font-semibold text-red-200 hover:text-white focus:text-white"
         >
-          <div className="w-8 h-8 flex items-center justify-center bg-red-500/20 rounded-md group-hover:bg-red-500/30 transition-colors duration-200">
+          <span className="ml-3 flex items-center justify-center w-9 h-9 bg-red-900/30 rounded-md group-hover:bg-red-700/40 transition-colors duration-200">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
             </svg>
-          </div>
-          <span className="mr-3 font-medium">تسجيل الخروج</span>
+          </span>
+          <span className="mr-2">تسجيل الخروج</span>
         </button>
       </div>
-    </div>
+    </aside>
   );
 }
 

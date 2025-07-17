@@ -46,7 +46,6 @@ async function createDefaultAdmin() {
         password_hash: hashedPassword,
         role: DEFAULT_ADMIN.role,
         phone: null,
-        avatar_url: null,
       }
     });
 

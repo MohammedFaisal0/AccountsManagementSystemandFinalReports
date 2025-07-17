@@ -17,7 +17,7 @@ export default function ActionButtons() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
       ),
-      color: 'bg-blue-500 hover:bg-blue-600',
+      color: 'bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800',
       show: hasPermission(PERMISSIONS.CREATE_USERS)
     },
     {

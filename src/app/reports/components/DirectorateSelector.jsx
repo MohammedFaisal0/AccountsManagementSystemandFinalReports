@@ -4,24 +4,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext'; // Import useAuth
 
-// Define the shape of the directorate data from the API
-interface Directorate {
-  directorate_id: number;
-  name: string;
-}
-
-// Define props
-interface DirectorateSelectorProps {
-  selectedDirectorates: number[]; // Array of selected directorate IDs
-  onDirectorateChange: (directorateIds: number[]) => void;
-  isDisabled?: boolean;
-}
-
-export default function DirectorateSelector({ selectedDirectorates, onDirectorateChange, isDisabled = false }: DirectorateSelectorProps) {
+export default function DirectorateSelector({ selectedDirectorates, onDirectorateChange, isDisabled = false }) {
   const { token } = useAuth(); // Get token for API call
-  const [directorates, setDirectorates] = useState<Directorate[]>([]);
+  const [directorates, setDirectorates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const [selectionType, setSelectionType] = useState('single'); // 'single' or 'all'
 
   // Fetch directorates from API
@@ -43,9 +30,9 @@ export default function DirectorateSelector({ selectedDirectorates, onDirectorat
         if (!response.ok) {
           throw new Error('Failed to fetch directorates');
         }
-        const data: Directorate[] = await response.json();
+        const data = await response.json();
         setDirectorates(data);
-      } catch (err: any) {
+      } catch (err) {
         setError(err.message || 'Error loading directorates.');
       } finally {
         setIsLoading(false);
@@ -54,7 +41,7 @@ export default function DirectorateSelector({ selectedDirectorates, onDirectorat
     fetchDirectorates();
   }, [token]);
 
-  const handleSelectionTypeChange = (type: 'single' | 'all') => {
+  const handleSelectionTypeChange = (type) => {
     setSelectionType(type);
     if (type === 'all') {
       // Select all fetched directorate IDs
@@ -65,7 +52,7 @@ export default function DirectorateSelector({ selectedDirectorates, onDirectorat
     }
   };
 
-  const handleDirectorateChange = (directorateId: number) => {
+  const handleDirectorateChange = (directorateId) => {
     if (selectionType === 'all') {
       return; // No individual selection in 'all' mode
     }
@@ -76,13 +63,13 @@ export default function DirectorateSelector({ selectedDirectorates, onDirectorat
   const effectiveDisabled = isDisabled || isLoading;
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-4 justify-end">
+    <div className="space-y-3">
+      <div className="flex gap-3 justify-end">
         <button
           type="button"
           onClick={() => handleSelectionTypeChange('single')}
           disabled={effectiveDisabled}
-          className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+          className={`px-3 py-1 rounded-lg transition-all duration-200 text-sm ${
             selectionType === 'single'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -94,7 +81,7 @@ export default function DirectorateSelector({ selectedDirectorates, onDirectorat
           type="button"
           onClick={() => handleSelectionTypeChange('all')}
           disabled={effectiveDisabled}
-          className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+          className={`px-3 py-1 rounded-lg transition-all duration-200 text-sm ${
             selectionType === 'all'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -104,19 +91,19 @@ export default function DirectorateSelector({ selectedDirectorates, onDirectorat
         </button>
       </div>
 
-      {error && <p className="text-red-500 text-right">خطأ: {error}</p>}
+      {error && <p className="text-red-500 text-xs text-right">خطأ: {error}</p>}
 
       {isLoading ? (
-        <div className="text-center py-4 text-gray-500">جاري تحميل المديريات...</div>
+        <div className="text-center py-3 text-sm text-gray-500">جاري تحميل المديريات...</div>
       ) : selectionType === 'single' ? (
         <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
           {directorates.length > 0 ? (
             directorates.map((directorate) => (
               <label
                 key={directorate.directorate_id}
-                className={`flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 ${effectiveDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                className={`flex items-center justify-between p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 ${effectiveDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
-                <span className="text-gray-700">{directorate.name}</span>
+                <span className="text-sm text-gray-700">{directorate.name}</span>
                 <input
                   type="radio"
                   name="directorate"
@@ -129,12 +116,12 @@ export default function DirectorateSelector({ selectedDirectorates, onDirectorat
               </label>
             ))
           ) : (
-            <div className="text-center py-4 text-gray-500">لا توجد مديريات متاحة.</div>
+            <div className="text-center py-3 text-sm text-gray-500">لا توجد مديريات متاحة.</div>
           )}
         </div>
       ) : (
         // selectionType === 'all'
-        <div className="p-4 bg-blue-50 rounded-lg text-blue-700">
+        <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
           تم اختيار جميع المديريات ({directorates.length} مديرية)
         </div>
       )}
