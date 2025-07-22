@@ -243,6 +243,7 @@ export default function AnalysisResults({
           </div>
         </div>
       )}
+<<<<<<< HEAD
       {/* عرض اسم العمود للمكتب والمديرية في منتصف الصفحة أعلى النتائج */}
       {(analysisResult.directorate_name || analysisResult.office_name) && (
         <div className="mt-8 mb-6 flex flex-col items-center gap-2">
@@ -259,6 +260,9 @@ export default function AnalysisResults({
         </div>
       )}
       {/* احذف عرض اسم المكتب والمديرية بالكامل */}
+=======
+
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-4">
         <div className="flex items-center space-x-4 space-x-reverse">
           <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -268,7 +272,11 @@ export default function AnalysisResults({
           </div>
           <div>
             <h2 className="text-lg font-bold text-white mb-1">نتائج التحليل</h2>
+<<<<<<< HEAD
         
+=======
+            <p className="text-green-100 text-sm">تم تحليل البيانات بنجاح</p>
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
           </div>
         </div>
       </div>

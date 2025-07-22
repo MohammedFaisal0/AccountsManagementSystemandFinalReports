@@ -2,8 +2,14 @@ fastapi>=0.104.0
 uvicorn>=0.24.0
 python-multipart>=0.0.6
 openpyxl>=3.1.0
+<<<<<<< HEAD
 xlrd>=2.0.1
 pandas>=2.0.0
 numpy>=1.24.0
 requests>=2.31.0 
 python-dotenv>=1.0.0
+=======
+pandas>=2.0.0
+numpy>=1.24.0
+requests>=2.31.0 
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d

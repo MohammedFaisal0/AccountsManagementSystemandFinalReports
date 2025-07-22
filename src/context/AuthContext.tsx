@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check if user is logged in on mount
   useEffect(() => {
+<<<<<<< HEAD
     const checkAuth = async () => {
       try {
         const token = Cookies.get('token');
@@ -73,6 +74,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     checkAuth();
+=======
+    const token = Cookies.get('token');
+    const userInfo = Cookies.get('userInfo');
+    if (token && userInfo) {
+      // Verify token and set user
+      fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.user) {
+            setUser(data.user);
+          } else {
+            Cookies.remove('token');
+            Cookies.remove('userInfo');
+          }
+        })
+        .catch(() => {
+          Cookies.remove('token');
+          Cookies.remove('userInfo');
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
   }, []);
 
   // Redirect to login if not authenticated and not loading

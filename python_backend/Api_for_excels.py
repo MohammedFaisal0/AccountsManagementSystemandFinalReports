@@ -7,10 +7,13 @@ from dics_of_ExcelCells import reading_first_sheet
 import traceback
 import datetime
 import pandas as pd # Import pandas for get_directorate_name
+<<<<<<< HEAD
 from dotenv import load_dotenv
 from excel_names_demo import excel_to_json, get_column_names
 
 load_dotenv()  # تحميل متغيرات البيئة من ملف .env إذا كان موجودًا
+=======
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
 
 app = FastAPI()
 
@@ -85,6 +88,7 @@ MONTHS_SHEET_MAPPING = {
 # Helper function to get directorate name from Excel file
 def get_directorate_name(file_path):
     try:
+<<<<<<< HEAD
         # First, validate that the file exists and is readable
         if not os.path.exists(file_path):
             print(f"Error: File does not exist: {file_path}")
@@ -137,6 +141,17 @@ def get_directorate_name(file_path):
     except Exception as e:
         print(f"Error extracting directorate name: {e}")
         return "مديرية غير محددة"
+=======
+        # Read the first sheet of the Excel file
+        df = pd.read_excel(file_path, sheet_name=0, header=None, engine='openpyxl')
+        # Assuming directorate name is in cell (1, 2) based on 10.xlsx
+        # Adjust row and column for 0-based indexing
+        directorate = df.iloc[1, 2] # Row 2, Column 3 (C2)
+        return str(directorate).replace('مديرية:', '').strip()
+    except Exception as e:
+        print(f"Error extracting directorate name: {e}")
+        return None
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
 
 @app.post("/process-excel/")
 async def process_excel(
@@ -198,6 +213,7 @@ async def process_excel(
         print(f"[DEBUG] File saved to: {file_path}")
         print(f"[DEBUG] File size: {len(file_content)} bytes")
 
+<<<<<<< HEAD
         # Validate Excel file integrity before processing
         try:
             import pandas as pd
@@ -253,14 +269,51 @@ async def process_excel(
         # Send data to Next.js API
         response = requests.post(NEXTJS_API_URL, json=payload)
         response.raise_for_status() # Raise an exception for HTTP errors (4xx or 5xx)
+=======
+        # Extract directorate name and year from the Excel file
+        directorate_name = get_directorate_name(file_path)
+        current_year = datetime.datetime.now().year # Assuming current year for now
+        
+        processed_data = None
+        if sheet_number == 1:
+            # For sheet 1, reading_first_sheet returns the hierarchical structure
+            processed_data = reading_first_sheet(
+                 excel_file_path=file_path,
+                 sheet_num=actual_sheet_index
+            )
+        else: # sheet_number == 2
+            # For sheet 2, read_accounts_from_excel returns financial accounts data
+            processed_data = read_accounts_from_excel(
+                file_path=file_path,
+                sheet_name=actual_sheet_index
+            )
+
+        # Prepare data to send to Next.js API
+        payload = {
+            "file_name": file.filename,
+            "month": month,
+            "year": str(current_year),
+            "directorate_name": directorate_name,
+            "sheet_number_processed": sheet_number,
+            "processed_data": processed_data
+        }
+
+        # Send data to Next.js API
+        response = requests.post(NEXTJS_API_URL, json=payload)
+        response.raise_for_status() # Raise an exception for HTTP errors (4xx or 5xx)
+
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
         return {
             "status": "success",
             "message": "File processed and data sent to Next.js API successfully",
             "sheet_number": sheet_number,
             "month": month,
             "actual_sheet_index": actual_sheet_index,
+<<<<<<< HEAD
             "office_name": office_col,
             "directorate_name": directorate_col,
+=======
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
             "data_sent": payload # Optionally return the payload sent
         }
 
@@ -277,6 +330,7 @@ async def process_excel(
             status_code=500,
             detail=f"Error processing file: {str(e)}"
         )
+<<<<<<< HEAD
     finally:
         # Clean up temporary file
         if 'file_path' in locals() and os.path.exists(file_path):
@@ -285,6 +339,11 @@ async def process_excel(
                 print(f"[DEBUG] Temporary file removed: {file_path}")
             except Exception as cleanup_error:
                 print(f"[WARNING] Failed to remove temporary file: {cleanup_error}")
+=======
+    # finally:
+    #     if os.path.exists(file_path):
+    #         os.remove(file_path)
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
 
 # Health check endpoint
 @app.get("/")

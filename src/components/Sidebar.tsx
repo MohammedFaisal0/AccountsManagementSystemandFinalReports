@@ -78,7 +78,11 @@ export default function Sidebar() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
         </svg>
       ),
+<<<<<<< HEAD
       show: mounted && hasPermission(PERMISSIONS.VIEW_USERS)
+=======
+      show: hasPermission(PERMISSIONS.VIEW_USERS)
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
     },
     {
       label: 'رفع الملفات',
@@ -102,6 +106,7 @@ export default function Sidebar() {
     }
   ];
 
+<<<<<<< HEAD
   // Show loading state until mounted
   if (!mounted || loading) {
     return (
@@ -121,6 +126,8 @@ export default function Sidebar() {
     );
   }
 
+=======
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
   return (
     <aside className="w-72 min-h-screen bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 rounded-xl shadow-2xl p-6 flex flex-col items-stretch transition-all duration-300">
       {/* User Info */}

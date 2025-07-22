@@ -89,11 +89,15 @@ export default function ImportPage() {
       
       // The Python backend returns data in result.data_sent.processed_data
       setSuccessMessage('تم تحليل الملف بنجاح. راجع البيانات أدناه.');
+<<<<<<< HEAD
       setAnalysisResult({
         ...result.data_sent,
         office_name: result.office_name,
         directorate_name: result.directorate_name,
       });
+=======
+      setAnalysisResult(result.data_sent);
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
     } catch (err: unknown) {
       console.error('Error details:', err);
       const errorMessage = err instanceof Error ? err.message : 'حدث خطأ أثناء تحليل الملف في الباكند بايثون.';
@@ -116,6 +120,7 @@ export default function ImportPage() {
 
     try {
       const nextJsApiUrl = 'http://localhost:3000/api/data/process';
+<<<<<<< HEAD
       // معالجة التداخل الزائد في processed_data
       const processedData = analysisResult.processed_data ? analysisResult.processed_data : analysisResult;
       const payload: any = {
@@ -132,6 +137,16 @@ export default function ImportPage() {
       if (analysisResult?.office_name) {
         payload.office_name = analysisResult.office_name;
       }
+=======
+      const payload = {
+        file_name: uploadedFile?.name || 'unknown_file.xlsx',
+        month: String(month),
+        year: String(new Date().getFullYear()),
+        directorate_name: analysisResult.directorate_name,
+        sheet_number_processed: pageNumber,
+        processed_data: analysisResult
+      };
+>>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
 
       const response = await fetch(nextJsApiUrl, {
         method: 'POST',
