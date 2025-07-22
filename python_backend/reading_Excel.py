@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 from dic_of_accounts import financial_accounts
+import os
 
 # Dictionary mapping (row, col) to type_id
 ROW_COL_TO_TYPE = {
@@ -59,17 +60,32 @@ def excel_to_json(file_path, sheet_name, orient='records', preview_rows=321,
             dtype=str
         ).fillna('')
         
+        # استخراج اسم المكتب والمديرية
+        # احذف استخراج اسم المكتب والمديرية
+        
+        print(f"[DEBUG] Excel file shape: {df.shape}")
+        print(f"[DEBUG] Looking for values in column 6 (index 5)")
+        
         # Extract type values from column 6
         type_values = {}
+        found_values = 0
+        
         for (row, col), type_id in ROW_COL_TO_TYPE.items():
             # Adjust for 0-based indexing in pandas
             row_idx = row - 1
             col_idx = col - 1
+            
             if row_idx < len(df) and col_idx < len(df.columns):
                 value = df.iat[row_idx, col_idx]
-                if value:  # Only add non-empty values
+                if value and str(value).strip():  # Only add non-empty values
                     type_values[type_id] = value
-
+                    found_values += 1
+                    print(f"[DEBUG] Found value at ({row}, {col}): {type_id} = {value}")
+            else:
+                print(f"[DEBUG] Index out of range: ({row}, {col}) -> ({row_idx}, {col_idx}) for {type_id}")
+        
+        print(f"[DEBUG] Total values found: {found_values}")
+        
         # التحويل إلى JSON
         json_data = df.to_json(orient=orient, force_ascii=False, indent=4)
         
@@ -77,9 +93,16 @@ def excel_to_json(file_path, sheet_name, orient='records', preview_rows=321,
         
         # Print extracted values in a consistent format
         print("\n=== القيم المستخرجة ===")
-        for type_id, value in type_values.items():
-            print(f"{type_id}: {value}")
-
+        if type_values:
+            for type_id, value in type_values.items():
+                print(f"{type_id}: {value}")
+        else:
+            print("❌ فشل في استخراج القيم من ملف Excel")
+            print("[DEBUG] Checking first few rows of column 6:")
+            for i in range(min(10, len(df))):
+                value = df.iat[i, 5] if len(df.columns) > 5 else "N/A"
+                print(f"  Row {i+1}: {value}")
+        
         # #البحث عن المسافات
         # if find_spaces:
         #     space_cells = []
@@ -140,8 +163,43 @@ def read_accounts_from_excel(file_path, sheet_name=0):
     Read Excel file and extract values based on the coordinates in financial_accounts dictionary
     """
     try:
-        # Read Excel file using pandas
-        df = pd.read_excel(file_path, sheet_name=sheet_name, header=None, engine='openpyxl')
+        # Validate file exists
+        if not os.path.exists(file_path):
+            print(f"Error: File does not exist: {file_path}")
+            return None
+            
+        # Check file size
+        file_size = os.path.getsize(file_path)
+        if file_size == 0:
+            print(f"Error: File is empty: {file_path}")
+            return None
+            
+        # Try to read Excel file with better error handling
+        try:
+            # Read Excel file using pandas with openpyxl engine
+            df = pd.read_excel(file_path, sheet_name=sheet_name, header=None, engine='openpyxl')
+        except Exception as openpyxl_error:
+            print(f"Error reading Excel file with openpyxl: {openpyxl_error}")
+            
+            # Try alternative engine
+            try:
+                df = pd.read_excel(file_path, sheet_name=sheet_name, header=None, engine='xlrd')
+            except Exception as xlrd_error:
+                print(f"Error reading Excel file with xlrd: {xlrd_error}")
+                
+                # Try without specifying engine
+                try:
+                    df = pd.read_excel(file_path, sheet_name=sheet_name, header=None)
+                except Exception as generic_error:
+                    print(f"Error reading Excel file with generic engine: {generic_error}")
+                    return None
+        
+        # Check if dataframe is empty
+        if df.empty:
+            print(f"Error: Excel file is empty or has no data: {file_path}")
+            return None
+            
+        print(f"Successfully read Excel file. Shape: {df.shape}")
         
         # Create a new dictionary with the same structure but with actual values
         result_dict = {}
@@ -158,19 +216,35 @@ def read_accounts_from_excel(file_path, sheet_name=0):
                 credit_col, credit_row = accounts['credit']
                 
                 # Excel coordinates are 0-based, so we subtract 1 from the provided coordinates
-                debit_value = df.iloc[debit_row - 1, debit_col - 1]
-                credit_value = df.iloc[credit_row - 1, credit_col - 1]
-                
-                # Store the actual values
-                result_dict[main_category][sub_category] = {
-                    'debit': float(debit_value) if pd.notna(debit_value) else 0.0,
-                    'credit': float(credit_value) if pd.notna(credit_value) else 0.0
-                }
+                try:
+                    debit_value = df.iloc[debit_row - 1, debit_col - 1]
+                    credit_value = df.iloc[credit_row - 1, credit_col - 1]
+                    
+                    # Store the actual values with proper error handling
+                    result_dict[main_category][sub_category] = {
+                        'debit': float(debit_value) if pd.notna(debit_value) and str(debit_value).strip() else 0.0,
+                        'credit': float(credit_value) if pd.notna(credit_value) and str(credit_value).strip() else 0.0
+                    }
+                    
+                except IndexError as idx_error:
+                    print(f"Warning: Index out of range for {main_category}/{sub_category}: {idx_error}")
+                    result_dict[main_category][sub_category] = {
+                        'debit': 0.0,
+                        'credit': 0.0
+                    }
+                except ValueError as val_error:
+                    print(f"Warning: Value error for {main_category}/{sub_category}: {val_error}")
+                    result_dict[main_category][sub_category] = {
+                        'debit': 0.0,
+                        'credit': 0.0
+                    }
         
         return result_dict
     
     except Exception as e:
         print(f"Error reading accounts from Excel file: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def test_accounts_extraction(excel_path, sheet_name=0):

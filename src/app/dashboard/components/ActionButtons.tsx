@@ -1,24 +1,30 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePermissions } from '@/lib/usePermissions';
 import { PERMISSIONS } from '@/lib/permissionUtils';
 
 export default function ActionButtons() {
   const { hasPermission } = usePermissions();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const actionButtons = [
     {
       label: 'إضافة مستخدم جديد',
-      href: '/add-users',
+      href: '/users/add',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
       ),
-      color: 'bg-blue-500 hover:bg-blue-600',
-      show: hasPermission(PERMISSIONS.CREATE_USERS)
+      color: 'bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800',
+      show: mounted && hasPermission(PERMISSIONS.CREATE_USERS)
     },
     {
       label: 'إدارة المستخدمين',
@@ -29,7 +35,7 @@ export default function ActionButtons() {
         </svg>
       ),
       color: 'bg-green-500 hover:bg-green-600',
-      show: hasPermission(PERMISSIONS.VIEW_USERS)
+      show: mounted && hasPermission(PERMISSIONS.VIEW_USERS)
     },
     {
       label: 'رفع ملفات',
@@ -40,7 +46,7 @@ export default function ActionButtons() {
         </svg>
       ),
       color: 'bg-purple-500 hover:bg-purple-600',
-      show: hasPermission(PERMISSIONS.UPLOAD_FILES)
+      show: mounted && hasPermission(PERMISSIONS.UPLOAD_FILES)
     },
     {
       label: 'عرض التقارير',
@@ -51,11 +57,25 @@ export default function ActionButtons() {
         </svg>
       ),
       color: 'bg-orange-500 hover:bg-orange-600',
-      show: hasPermission(PERMISSIONS.VIEW_REPORTS)
+      show: mounted && hasPermission(PERMISSIONS.VIEW_REPORTS)
     }
   ];
 
   const visibleButtons = actionButtons.filter(button => button.show);
+
+  // Show loading state until mounted
+  if (!mounted) {
+    return (
+      <div>
+        <h2 className="text-lg font-bold text-gray-800 mb-3">إجراءات سريعة</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-16 bg-gray-200 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

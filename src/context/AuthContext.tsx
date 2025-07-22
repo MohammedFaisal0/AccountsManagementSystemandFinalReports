@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { usePathname } from 'next/navigation';
 
 // Define the shape of the user object
 interface User {
@@ -28,37 +29,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   // Check if user is logged in on mount
   useEffect(() => {
-    const token = Cookies.get('token');
-    if (token) {
-      // Verify token and set user
-      fetch('/api/auth/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.user) {
-            setUser(data.user);
-          } else {
-            Cookies.remove('token');
+    const checkAuth = async () => {
+      try {
+        const token = Cookies.get('token');
+        const userInfo = Cookies.get('userInfo');
+        
+        if (token && userInfo) {
+          // Try to verify token
+          const response = await fetch('/api/auth/verify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.user) {
+              setUser(data.user);
+              setLoading(false);
+              return;
+            }
           }
-        })
-        .catch(() => {
-          Cookies.remove('token');
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
+        }
+        
+        // If we reach here, either no token or invalid token
+        Cookies.remove('token');
+        Cookies.remove('userInfo');
+        setUser(null);
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth check error:', error);
+        Cookies.remove('token');
+        Cookies.remove('userInfo');
+        setUser(null);
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
+
+  // Redirect to login if not authenticated and not loading
+  useEffect(() => {
+    if (!loading && !user && pathname !== '/login') {
+      router.push('/login');
+    }
+  }, [loading, user, pathname, router]);
 
   // Login function
   const login = async (email: string, password: string, role?: string): Promise<{ success: boolean; message?: string }> => {
@@ -74,12 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (response.ok && data.token) {
-        // Set token in cookies
+        // Set token and userInfo in cookies
         Cookies.set('token', data.token, { expires: 7 }); // 7 days
-        
+        Cookies.set('userInfo', JSON.stringify(data.user), { expires: 7 });
         // Set user data
         setUser(data.user);
-        
         return { success: true };
       } else {
         return { success: false, message: data.message || 'فشل تسجيل الدخول' };
@@ -102,7 +123,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       // Remove token and user data
       Cookies.remove('token');
+      Cookies.remove('userInfo');
       setUser(null);
+      router.push('/login');
     }
   };
 

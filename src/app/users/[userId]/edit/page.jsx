@@ -3,13 +3,12 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
-import UserForm from '../../../add-users/components/UserForm';
+import UserForm from '../../add/components/UserForm';
 
 export default function EditUserPage() {
   const router = useRouter();
   const params = useParams();
   const userId = params.userId;
-  const [avatar, setAvatar] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
@@ -21,7 +20,6 @@ export default function EditUserPage() {
     phone: '',
     role: '',
   });
-  const fileInputRef = useRef();
 
   useEffect(() => {
     if (userId) {
@@ -42,9 +40,6 @@ export default function EditUserPage() {
           phone: userData.phone || '',
           role: userData.role || '',
         });
-        if (userData.avatar_url) {
-          setAvatar(userData.avatar_url);
-        }
       } else {
         setError('فشل في تحميل بيانات المستخدم');
       }
@@ -62,15 +57,6 @@ export default function EditUserPage() {
       setForm((prev) => ({ ...prev, [name]: checked }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setAvatar(URL.createObjectURL(file));
-    } else {
-      setAvatar(null);
     }
   };
 
@@ -129,32 +115,36 @@ export default function EditUserPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-blue-50">
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-lg">جاري التحميل...</div>
+          <div className="text-sm">جاري التحميل...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <Sidebar />
       <div className="flex-1 overflow-auto">
-        <div className="p-8">
+        <div className="p-4">
           <div className="max-w-6xl mx-auto">
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-6">
               <div className="flex items-center justify-between">
                 <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">تعديل المستخدم</h1>
-              <p className="text-gray-600">تعديل بيانات المستخدم في النظام</p>
+              <h1 className="text-xl font-bold text-gray-800 mb-1">
+                تعديل المستخدم
+              </h1>
+              <p className="text-xs text-gray-600">
+                تعديل بيانات المستخدم في النظام
+              </p>
             </div>
                 <div className="flex items-center space-x-3 space-x-reverse">
                   <button
                     onClick={() => router.push('/users')}
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 border-none rounded-lg hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
                   >
                     <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -163,7 +153,7 @@ export default function EditUserPage() {
                   </button>
                 </div>
               </div>
-              </div>
+            </div>
 
             {/* Main Content */}
                 <UserForm
@@ -174,9 +164,6 @@ export default function EditUserPage() {
                   error={error}
                   successMessage={successMessage}
                   isEditMode={true}
-              avatar={avatar}
-              onAvatarChange={handleAvatarChange}
-              fileInputRef={fileInputRef}
                 />
           </div>
         </div>

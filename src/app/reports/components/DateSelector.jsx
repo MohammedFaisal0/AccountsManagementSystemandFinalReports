@@ -33,7 +33,7 @@ export default function DateSelector({ reportType, selectedDate, onDateChange })
           <select
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg p-3 text-right bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-700"
+            className="w-full border border-gray-200 rounded-lg p-2 text-right bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm text-gray-700"
           >
             <option value="">اختر الشهر</option>
             {MONTHS.map((month) => (
@@ -49,7 +49,7 @@ export default function DateSelector({ reportType, selectedDate, onDateChange })
           <select
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg p-3 text-right bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-700"
+            className="w-full border border-gray-200 rounded-lg p-2 text-right bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm text-gray-700"
           >
             <option value="">اختر الربع</option>
             {QUARTERS.map((quarter) => (
@@ -65,7 +65,7 @@ export default function DateSelector({ reportType, selectedDate, onDateChange })
           <select
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg p-3 text-right bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-700"
+            className="w-full border border-gray-200 rounded-lg p-2 text-right bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm text-gray-700"
           >
             <option value="">اختر السنة</option>
             {years.map((year) => (
@@ -83,7 +83,7 @@ export default function DateSelector({ reportType, selectedDate, onDateChange })
 
   return (
     <div className="space-y-2">
-      <label className="block text-right font-medium text-gray-700">
+      <label className="block text-right font-medium text-gray-700 text-sm">
         {reportType === 'monthly' && 'اختر الشهر'}
         {reportType === 'quarterly' && 'اختر الربع'}
         {reportType === 'annual' && 'اختر السنة'}

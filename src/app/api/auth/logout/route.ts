@@ -11,8 +11,8 @@ export async function POST(request: NextRequest) {
     // Set the cookie with an expiry date in the past
     response.cookies.set('token', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development', // Use secure cookies in production
-      expires: new Date(0), // Set expiry date to the past
+      secure: process.env.NODE_ENV !== 'development', // 
+      expires: new Date(0),
       path: '/',
       sameSite: 'strict',
     });

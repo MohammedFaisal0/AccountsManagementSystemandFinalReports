@@ -1,174 +1,130 @@
 // src/app/api/reports/financial-data/route.ts
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { NextRequest } from "next/server";
+import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
 
-export async function GET(request: NextRequest) {
+const prisma = new PrismaClient();
+
+export async function GET(request: Request) {
   try {
-    // Authentication/authorization checks should be added (e.g., verify JWT)
-
     const { searchParams } = new URL(request.url);
-    const directorateIdStr = searchParams.get("directorateId");
-    const officeIdStr = searchParams.get("officeId");
-    const monthStr = searchParams.get("month");
-    const yearStr = searchParams.get("year");
-    const accountTypeIdStr = searchParams.get("accountTypeId");
-    // Add more filters as needed (e.g., revenue/use type)
+    const directorateId = searchParams.get('directorateId');
+    const officeId = searchParams.get('officeId');
+    const month = searchParams.get('month');
+    const year = searchParams.get('year');
+    const accountType = searchParams.get('accountType'); // 'revenue' or 'use'
 
-    // Build the where clause for Prisma query dynamically
+    // Build where clause
     const whereClause: any = {};
 
-    // --- Input Validation and Parsing ---
-    let directorateId: number | undefined;
-    let officeId: number | undefined;
-    let month: number | undefined;
-    let year: number | undefined;
-    let accountTypeId: number | undefined;
-
-    try {
-        if (directorateIdStr) directorateId = parseInt(directorateIdStr);
-        if (officeIdStr) officeId = parseInt(officeIdStr);
-        if (monthStr) month = parseInt(monthStr);
-        if (yearStr) year = parseInt(yearStr);
-        if (accountTypeIdStr) accountTypeId = parseInt(accountTypeIdStr);
-    } catch (e) {
-        return NextResponse.json({ message: "Invalid numeric filter parameter format" }, { status: 400 });
+    if (directorateId) {
+      whereClause.directorate_id = parseInt(directorateId);
     }
 
-    // --- Apply Filters ---
-    if (officeId) whereClause.office_id = officeId;
-    if (accountTypeId) whereClause.account_type_id = accountTypeId;
-
-    // If directorateId is provided (and not officeId), filter by offices within that directorate
-    if (directorateId && !officeId) {
-       const officesInDirectorate = await prisma.office.findMany({
-           where: { directorate_id: directorateId },
-           select: { office_id: true }
-       });
-       const officeIds = officesInDirectorate.map(o => o.office_id);
-       if (officeIds.length > 0) {
-           whereClause.office_id = { in: officeIds };
-       } else {
-           // No offices found for this directorate, return empty
-           return NextResponse.json([]);
-       }
+    if (officeId) {
+      whereClause.office_id = parseInt(officeId);
     }
 
-    // Add filtering by month/year if provided (filters by the ImportedFile relationship)
-    if (month || year) {
-        const fileWhereClause: any = {};
-        if (month) fileWhereClause.month = month;
-        if (year) fileWhereClause.year = year;
-        // If filtering by directorate, add it to file filter too
-        if (directorateId) fileWhereClause.directorate_id = directorateId;
-
-        // Find relevant file IDs first
-        const relevantFiles = await prisma.importedFile.findMany({
-            where: fileWhereClause,
-            select: { file_id: true }
-        });
-        const fileIds = relevantFiles.map(f => f.file_id);
-        
-        if (fileIds.length > 0) {
-            // Add file ID filter to the main where clause
-            if (whereClause.imported_file_id) {
-                // If already filtering by file IDs (e.g., from another condition), intersect
-                whereClause.imported_file_id = { in: whereClause.imported_file_id.in.filter((id: number) => fileIds.includes(id)) };
-            } else {
-                whereClause.imported_file_id = { in: fileIds };
-            }
-            // If intersection results in empty list, return empty
-            if (whereClause.imported_file_id.in.length === 0) {
-                 return NextResponse.json([]);
-            }
-        } else {
-             // No files match the time/directorate criteria, return empty
-            return NextResponse.json([]);
-        }
+    if (month && year) {
+      const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const endDate = new Date(parseInt(year), parseInt(month), 0);
+      whereClause.date = {
+        gte: startDate,
+        lte: endDate,
+      };
     }
 
+    if (accountType) {
+      whereClause.account_id = accountType === 'revenue' ? 1 : 2;
+    }
 
-    // Fetch the financial data entries based on filters
-    const financialData = await prisma.financialDataEntry.findMany({
+    // Get transactions with related data
+    const transactions = await prisma.transaction.findMany({
       where: whereClause,
       include: {
-        // Include related data needed for reporting
         office: {
-          select: { name: true, directorate: { select: { name: true } } }
-        },
-        accountType: { select: { name: true } },
-        // Include full hierarchy for revenue/use if needed
-        revenueType: {
           include: {
-            item: {
-              include: {
-                section: {
-                  include: { chapter: true }
-                }
-              }
-            }
-          }
+            directorate: true,
+          },
         },
-        useType: {
-          include: {
-            item: {
-              include: {
-                section: {
-                  include: { chapter: true }
-                }
-              }
-            }
-          }
-        },
-        importedFile: { select: { original_file_name: true, month: true, year: true } }
+        chapter: true,
+        section: true,
+        item: true,
+        type: true,
       },
-      // Add ordering if needed
-      orderBy: {
-        created_at: 'desc', // Example ordering
-      },
+      orderBy: [
+        { chapter_id: 'asc' },
+        { section_id: 'asc' },
+        { item_id: 'asc' },
+        { type_id: 'asc' },
+      ],
     });
 
-          // Aggregation logic should be implemented here if needed based on a reportType parameter
-    // Example: Group by office, sum amounts, etc.
+    // Group transactions by hierarchy
+    const groupedData = transactions.reduce((acc, transaction) => {
+      const chapterKey = transaction.chapter_id;
+      const sectionKey = transaction.section_id;
+      const itemKey = transaction.item_id;
+      const typeKey = transaction.type_id;
 
-    return NextResponse.json(financialData);
+      if (!acc[chapterKey]) {
+        acc[chapterKey] = {
+          chapter_id: transaction.chapter_id,
+          chapter_name: transaction.chapter.name,
+          total_amount: 0,
+          sections: {},
+        };
+      }
 
-  } catch (error) {
-    console.error("Error fetching financial data:", error);
-    return NextResponse.json(
-      { message: "An internal server error occurred" },
-      { status: 500 }
-    );
-  }
-}
+      if (!acc[chapterKey].sections[sectionKey]) {
+        acc[chapterKey].sections[sectionKey] = {
+          section_id: transaction.section_id,
+          section_name: transaction.section.name,
+          total_amount: 0,
+          items: {},
+        };
+      }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { data, userId, directorateId, month, year } = body;
-    if (!data || !userId || !directorateId || !month || !year) {
-      return NextResponse.json({ message: 'Missing required fields.' }, { status: 400 });
-    }
-    // Example: Save each entry in the processed data (assuming data is an array of entries)
-    // You may need to adjust this based on your actual data structure
-    const createdEntries = [];
-    for (const entry of Array.isArray(data) ? data : [data]) {
-      const created = await prisma.financialDataEntry.create({
-        data: {
-          // Map fields from entry to your Prisma model
-          ...entry,
-          user_id: userId,
-          directorate_id: directorateId,
-          month,
-          year,
+      if (!acc[chapterKey].sections[sectionKey].items[itemKey]) {
+        acc[chapterKey].sections[sectionKey].items[itemKey] = {
+          item_id: transaction.item_id,
+          item_name: transaction.item.name,
+          total_amount: 0,
+          types: {},
+        };
+      }
+
+      if (!acc[chapterKey].sections[sectionKey].items[itemKey].types[typeKey]) {
+        acc[chapterKey].sections[sectionKey].items[itemKey].types[typeKey] = {
+          type_id: transaction.type_id,
+          type_name: transaction.type.name,
+          amount: 0,
+          office: transaction.office.name,
+          directorate: transaction.office.directorate.name,
+        };
+      }
+
+      acc[chapterKey].sections[sectionKey].items[itemKey].types[typeKey].amount += Number(transaction.amount);
+      acc[chapterKey].sections[sectionKey].items[itemKey].total_amount += Number(transaction.amount);
+      acc[chapterKey].sections[sectionKey].total_amount += Number(transaction.amount);
+      acc[chapterKey].total_amount += Number(transaction.amount);
+
+      return acc;
+    }, {} as any);
+
+    return NextResponse.json({
+      transactions: groupedData,
+      summary: {
+        total_transactions: transactions.length,
+        total_amount: transactions.reduce((sum, t) => sum + Number(t.amount), 0),
+        directorate_count: new Set(transactions.map(t => t.directorate_id)).size,
+        office_count: new Set(transactions.map(t => t.office_id)).size,
         },
       });
-      createdEntries.push(created);
-    }
-    return NextResponse.json({ message: 'Data imported successfully', entries: createdEntries }, { status: 201 });
   } catch (error) {
-    console.error('Error importing financial data:', error);
-    return NextResponse.json({ message: 'Error importing financial data' }, { status: 500 });
+    console.error('Error fetching financial data:', error);
+    return NextResponse.json({ error: 'Failed to fetch financial data' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

@@ -1,7 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+const prismaClient = new PrismaClient();
 
 interface AdminUser {
   name: string;
@@ -11,7 +11,7 @@ interface AdminUser {
 }
 
 const DEFAULT_ADMIN: AdminUser = {
-  name: 'System Administrator',
+  name: 'علي محسن',
   email: 'admin@system.com',
   password: 'admin123',
   role: 'administrator'
@@ -22,7 +22,7 @@ async function createDefaultAdmin() {
     console.log('🔧 Creating default admin user...');
     
     // Check if admin already exists
-    const existingAdmin = await prisma.user.findUnique({
+    const existingAdmin = await prismaClient.user.findUnique({
       where: { email: DEFAULT_ADMIN.email }
     });
 
@@ -39,14 +39,13 @@ async function createDefaultAdmin() {
     const hashedPassword = await bcrypt.hash(DEFAULT_ADMIN.password, 12);
 
     // Create the admin user
-    const adminUser = await prisma.user.create({
+    const adminUser = await prismaClient.user.create({
       data: {
         name: DEFAULT_ADMIN.name,
         email: DEFAULT_ADMIN.email,
         password_hash: hashedPassword,
         role: DEFAULT_ADMIN.role,
         phone: null,
-        avatar_url: null,
       }
     });
 
@@ -67,7 +66,7 @@ async function createDefaultAdmin() {
     console.error('❌ Error creating admin user:', error);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    await prismaClient.$disconnect();
   }
 }
 

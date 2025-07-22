@@ -1,7 +1,9 @@
 // src/app/api/auth/verify/route.ts
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/authUtils";
-import prisma from "@/lib/prisma";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
@@ -31,13 +33,12 @@ export async function POST(request: Request) {
         name: true,
         email: true,
         role: true,
-        status: true,
       },
     });
 
-    if (!user || !user.status) {
+    if (!user) {
       return NextResponse.json(
-        { message: 'User not found or inactive' },
+        { message: 'User not found' },
         { status: 401 }
       );
     }
@@ -56,5 +57,7 @@ export async function POST(request: Request) {
       { message: 'Token verification failed' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 } 

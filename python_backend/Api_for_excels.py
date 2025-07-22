@@ -1,10 +1,16 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 import os
-from reading_Excel import read_accounts_from_excel
+import requests # Import requests library for HTTP calls
+from reading_Excel import read_accounts_from_excel, excel_to_json
 from dics_of_ExcelCells import reading_first_sheet
-# from dics_of_ExcelCells import excel_to_json
 import traceback
+import datetime
+import pandas as pd # Import pandas for get_directorate_name
+from dotenv import load_dotenv
+from excel_names_demo import excel_to_json, get_column_names
+
+load_dotenv()  # تحميل متغيرات البيئة من ملف .env إذا كان موجودًا
 
 app = FastAPI()
 
@@ -20,6 +26,9 @@ app.add_middleware(
 # Create temporary upload directory
 UPLOAD_DIR = "temp_uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# URL for the Next.js API endpoint to receive processed data
+NEXTJS_API_URL = os.getenv("NEXTJS_API_URL", "http://localhost:3000/api/data/process") # Default for local development
 
 # Sheet mapping dictionary
 MONTHS_SHEET_MAPPING = {
@@ -73,6 +82,62 @@ MONTHS_SHEET_MAPPING = {
     }
 }
 
+# Helper function to get directorate name from Excel file
+def get_directorate_name(file_path):
+    try:
+        # First, validate that the file exists and is readable
+        if not os.path.exists(file_path):
+            print(f"Error: File does not exist: {file_path}")
+            return None
+            
+        # Check file size
+        file_size = os.path.getsize(file_path)
+        if file_size == 0:
+            print(f"Error: File is empty: {file_path}")
+            return None
+            
+        # Try to read the Excel file with better error handling
+        try:
+            # Read the first sheet of the Excel file
+            df = pd.read_excel(file_path, sheet_name=0, header=None, engine='openpyxl')
+            
+            # Check if dataframe is empty
+            if df.empty:
+                print(f"Error: Excel file is empty or has no data: {file_path}")
+                return None
+                
+            # Assuming directorate name is in cell (1, 2) based on 10.xlsx
+            # Adjust row and column for 0-based indexing
+            if len(df) > 1 and len(df.columns) > 2:
+                directorate = df.iloc[1, 2] # Row 2, Column 3 (C2)
+                if pd.notna(directorate) and str(directorate).strip():
+                    return str(directorate).replace('مديرية:', '').strip()
+                else:
+                    print(f"Warning: Directorate cell is empty or NaN")
+                    return "مديرية غير محددة"
+            else:
+                print(f"Error: Excel file doesn't have enough rows/columns: {file_path}")
+                return None
+                
+        except Exception as excel_error:
+            print(f"Error reading Excel file with openpyxl: {excel_error}")
+            
+            # Try alternative approach with xlrd for older Excel files
+            try:
+                df = pd.read_excel(file_path, sheet_name=0, header=None, engine='xlrd')
+                if len(df) > 1 and len(df.columns) > 2:
+                    directorate = df.iloc[1, 2]
+                    if pd.notna(directorate) and str(directorate).strip():
+                        return str(directorate).replace('مديرية:', '').strip()
+            except Exception as xlrd_error:
+                print(f"Error reading Excel file with xlrd: {xlrd_error}")
+                
+            return "مديرية غير محددة"
+            
+    except Exception as e:
+        print(f"Error extracting directorate name: {e}")
+        return "مديرية غير محددة"
+
 @app.post("/process-excel/")
 async def process_excel(
     file: UploadFile = File(...),
@@ -83,6 +148,8 @@ async def process_excel(
         print(f"[DEBUG] Received month: {month} (type: {type(month)}) sheet_number: {sheet_number} (type: {type(sheet_number)})")
         print(f"[DEBUG] Available month keys: {list(MONTHS_SHEET_MAPPING.keys())}")
         print(f"[DEBUG] Month in mapping: {month in MONTHS_SHEET_MAPPING}")
+        print(f"[DEBUG] File name: {file.filename}")
+        print(f"[DEBUG] File content type: {file.content_type}")
         
         # Validate file extension
         if not file.filename.endswith((".xlsx", ".xls")):
@@ -113,37 +180,96 @@ async def process_excel(
 
         # Save file temporarily
         file_path = os.path.join(UPLOAD_DIR, file.filename)
+        
+        # Read file content first to validate
+        file_content = await file.read()
+        
+        # Check if file is empty
+        if len(file_content) == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded file is empty"
+            )
+            
+        # Save file to disk
         with open(file_path, "wb") as buffer:
-            buffer.write(await file.read())
+            buffer.write(file_content)
+            
+        print(f"[DEBUG] File saved to: {file_path}")
+        print(f"[DEBUG] File size: {len(file_content)} bytes")
 
+        # Validate Excel file integrity before processing
         try:
-            # Process based on sheet number
-            if sheet_number == 1:
-                json_data = reading_first_sheet(
-                     excel_file_path=file_path,
-                     sheet_num=actual_sheet_index
-                )
-                result = {
-                    "json_data": json_data,
-                }
-            else:
-                result = read_accounts_from_excel(
-                    file_path=file_path,
-                    sheet_name=actual_sheet_index
-                )
-
-            return {
-                "status": "success",
-                "sheet_number": sheet_number,
-                "month": month,
-                "actual_sheet_index": actual_sheet_index,
-                "data": result
-            }
-
-        finally:
+            import pandas as pd
+            # Try to read the file to check if it's valid
+            test_df = pd.read_excel(file_path, sheet_name=0, header=None, engine='openpyxl')
+            print(f"[DEBUG] File validation successful. Shape: {test_df.shape}")
+        except Exception as validation_error:
+            print(f"[ERROR] File validation failed: {validation_error}")
+            # Clean up the invalid file
             if os.path.exists(file_path):
                 os.remove(file_path)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid Excel file. The file appears to be corrupted or not a valid Excel file. Error: {str(validation_error)}"
+            )
 
+        # Extract directorate name and year from the Excel file
+        directorate_name = get_directorate_name(file_path)
+        current_year = datetime.datetime.now().year # Assuming current year for now
+        
+        processed_data = None
+        office_col = None
+        directorate_col = None
+        if sheet_number == 1:
+            result = reading_first_sheet(
+                 excel_file_path=file_path,
+                 sheet_num=actual_sheet_index
+            )
+            processed_data = result
+        else: # sheet_number == 2
+            processed_data = read_accounts_from_excel(
+                file_path=file_path,
+                sheet_name=actual_sheet_index
+            )
+        # استخراج اسم العمود للمكتب والمديرية من الورقة الثانية (Sheet 2)
+        office_col, directorate_col = get_column_names(file_path)
+        # Validate processed data
+        if processed_data is None:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to process Excel file. Please check if the file format is correct."
+            )
+        # Prepare data to send to Next.js API
+        payload = {
+            "file_name": file.filename,
+            "month": month,
+            "year": str(current_year),
+            "office_name": office_col,
+            "directorate_name": directorate_col,
+            "sheet_number_processed": sheet_number,
+            "processed_data": processed_data
+        }
+        # Send data to Next.js API
+        response = requests.post(NEXTJS_API_URL, json=payload)
+        response.raise_for_status() # Raise an exception for HTTP errors (4xx or 5xx)
+        return {
+            "status": "success",
+            "message": "File processed and data sent to Next.js API successfully",
+            "sheet_number": sheet_number,
+            "month": month,
+            "actual_sheet_index": actual_sheet_index,
+            "office_name": office_col,
+            "directorate_name": directorate_col,
+            "data_sent": payload # Optionally return the payload sent
+        }
+
+    except requests.exceptions.RequestException as e:
+        print(f"[ERROR] Failed to send data to Next.js API: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send data to Next.js API: {str(e)}"
+        )
     except Exception as e:
         print("[EXCEPTION] Exception occurred in /process-excel endpoint:")
         traceback.print_exc()
@@ -151,6 +277,14 @@ async def process_excel(
             status_code=500,
             detail=f"Error processing file: {str(e)}"
         )
+    finally:
+        # Clean up temporary file
+        if 'file_path' in locals() and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                print(f"[DEBUG] Temporary file removed: {file_path}")
+            except Exception as cleanup_error:
+                print(f"[WARNING] Failed to remove temporary file: {cleanup_error}")
 
 # Health check endpoint
 @app.get("/")
@@ -160,3 +294,5 @@ def read_root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+

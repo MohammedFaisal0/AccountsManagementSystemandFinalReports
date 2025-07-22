@@ -1,28 +1,29 @@
 // src/app/api/users/[userId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
 import { hashPassword } from '@/lib/authUtils';
 
-// GET /api/users/[userId] - Get a user by ID
-export async function GET(request: NextRequest, { params }: { params: { userId: string } }) {
-  const userId = parseInt(params.userId, 10);
+const prisma = new PrismaClient();
 
-  if (isNaN(userId)) {
+// GET /api/users/[userId] - Get a user by ID
+export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  const { userId } = await params;
+  const userIdNum = parseInt(userId, 10);
+
+  if (isNaN(userIdNum)) {
     return NextResponse.json({ message: 'Invalid user ID' }, { status: 400 });
   }
 
   try {
     const user = await prisma.user.findUnique({
-      where: { user_id: userId },
+      where: { user_id: userIdNum },
       select: {
         user_id: true,
         name: true,
         email: true,
         phone: true,
         role: true,
-        avatar_url: true,
         created_at: true,
-        updated_at: true,
       },
     });
 
@@ -32,22 +33,25 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error('Error fetching user:', error);
+    console.error('Error fetching user:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json({ message: 'Error fetching user' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
 // PUT /api/users/[userId] - Update a user by ID
-export async function PUT(request: NextRequest, { params }: { params: { userId: string } }) {
-  const userId = parseInt(params.userId, 10);
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  const { userId } = await params;
+  const userIdNum = parseInt(userId, 10);
 
-  if (isNaN(userId)) {
+  if (isNaN(userIdNum)) {
     return NextResponse.json({ message: 'Invalid user ID' }, { status: 400 });
   }
 
   try {
     const body = await request.json();
-    const { name, email, phone, avatar_url, password, role } = body;
+    const { name, email, phone, password, role } = body;
 
     // Basic validation
     if (!email && !name) {
@@ -58,7 +62,6 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
     if (phone !== undefined) updateData.phone = phone;
-    if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
     if (role !== undefined) {
       // Validate role
       const validRoles = ['administrator', 'employee', 'reviewer'];
@@ -77,7 +80,7 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
     }
 
     const updatedUser = await prisma.user.update({
-      where: { user_id: userId },
+      where: { user_id: userIdNum },
       data: updateData,
       select: {
         user_id: true,
@@ -85,31 +88,32 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
         email: true,
         phone: true,
         role: true,
-        avatar_url: true,
         created_at: true,
-        updated_at: true,
       },
     });
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    console.error('Error updating user:', error);
+    console.error('Error updating user:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json({ message: 'Error updating user' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
 // DELETE /api/users/[userId] - Delete a user by ID
-export async function DELETE(request: NextRequest, { params }: { params: { userId: string } }) {
-  const userId = parseInt(params.userId, 10);
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  const { userId } = await params;
+  const userIdNum = parseInt(userId, 10);
 
-  if (isNaN(userId)) {
+  if (isNaN(userIdNum)) {
     return NextResponse.json({ message: 'Invalid user ID' }, { status: 400 });
   }
 
   try {
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { user_id: userId },
+      where: { user_id: userIdNum },
     });
 
     if (!existingUser) {
@@ -118,13 +122,15 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
 
     // Delete the user
     await prisma.user.delete({
-      where: { user_id: userId },
+      where: { user_id: userIdNum },
     });
 
     return NextResponse.json({ message: 'User deleted successfully' });
   } catch (error) {
-    console.error('Error deleting user:', error);
+    console.error('Error deleting user:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json({ message: 'Error deleting user' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

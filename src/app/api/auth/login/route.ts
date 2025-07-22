@@ -1,7 +1,9 @@
 // src/app/api/auth/login/route.ts
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { PrismaClient } from "@prisma/client";
 import { comparePassword, generateToken } from "@/lib/authUtils";
+
+const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
@@ -75,6 +77,8 @@ export async function POST(request: Request) {
       { message: 'خطأ في تسجيل الدخول' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

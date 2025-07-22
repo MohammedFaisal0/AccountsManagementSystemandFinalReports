@@ -1,33 +1,47 @@
 // src/app/api/offices/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
 
-// Authentication middleware should be implemented if needed
+const prisma = new PrismaClient();
 
-// GET /api/offices - List offices, optionally filtered by directorate
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const directorateId = searchParams.get('directorateId');
-
-  let whereClause = {};
-  if (directorateId) {
-    const id = parseInt(directorateId, 10);
-    if (!isNaN(id)) {
-      whereClause = { directorate_id: id };
-    } else {
-      return NextResponse.json({ message: 'Invalid directorateId parameter' }, { status: 400 });
-    }
-  }
-
+export async function GET() {
   try {
     const offices = await prisma.office.findMany({
-      where: whereClause,
-      orderBy: { name: 'asc' },
+      include: {
+        directorate: true,
+      },
     });
+
     return NextResponse.json(offices);
   } catch (error) {
     console.error('Error fetching offices:', error);
-    return NextResponse.json({ message: 'Error fetching offices' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch offices' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { name, directorate_id } = await request.json();
+
+    if (!name || !directorate_id) {
+      return NextResponse.json({ error: 'Office name and directorate_id are required' }, { status: 400 });
+    }
+
+    const office = await prisma.office.create({
+      data: { name, directorate_id: parseInt(directorate_id) },
+      include: {
+        directorate: true,
+      },
+    });
+
+    return NextResponse.json(office);
+  } catch (error) {
+    console.error('Error creating office:', error);
+    return NextResponse.json({ error: 'Failed to create office' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

@@ -1,7 +1,9 @@
 // src/app/api/users/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
 import { hashPassword } from '@/lib/authUtils';
+
+const prisma = new PrismaClient();
 
 // GET /api/users - List all users
 export async function GET(request: NextRequest) {
@@ -33,9 +35,7 @@ export async function GET(request: NextRequest) {
           email: true,
           phone: true,
           role: true,
-          avatar_url: true,
           created_at: true,
-          updated_at: true,
         },
         orderBy: { created_at: 'desc' },
         skip,
@@ -59,6 +59,8 @@ export async function GET(request: NextRequest) {
       { message: 'Error fetching users' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
@@ -72,7 +74,6 @@ export async function POST(request: NextRequest) {
     const password = formData.get('password') as string;
     const phone = formData.get('phone') as string;
     const role = formData.get('role') as string;
-    const avatar = formData.get('avatar') as File | null;
 
     // Validate required fields
     if (!name || !email || !password || !role) {
@@ -106,14 +107,6 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Handle avatar upload if provided
-    let avatarUrl = null;
-    if (avatar) {
-      // For now, we'll store a placeholder URL
-      // In a real application, you'd upload to a cloud service like AWS S3
-      avatarUrl = `/uploads/avatars/${Date.now()}-${avatar.name}`;
-    }
-
     // Create user
     const user = await prisma.user.create({
       data: {
@@ -122,7 +115,6 @@ export async function POST(request: NextRequest) {
         password_hash: hashedPassword,
         phone: phone?.trim() || null,
         role: role,
-        avatar_url: avatarUrl,
       },
       select: {
         user_id: true,
@@ -130,7 +122,6 @@ export async function POST(request: NextRequest) {
         email: true,
         phone: true,
         role: true,
-        avatar_url: true,
         created_at: true,
       },
     });
@@ -142,6 +133,8 @@ export async function POST(request: NextRequest) {
       { message: 'Error creating user' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

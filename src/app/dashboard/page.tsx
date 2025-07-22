@@ -6,6 +6,7 @@ import NotificationList from './components/NotificationList';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import Sidebar from '../../components/Sidebar';
 import ActionButtons from './components/ActionButtons';
+import NoSSR from '../../components/NoSSR';
 
 export default function Dashboard() {
   return (
@@ -42,7 +43,18 @@ export default function Dashboard() {
 
             {/* Action Buttons Section */}
             <div className="lg:col-span-12 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 p-4 hover:shadow-xl transition-all duration-300">
-              <ActionButtons />
+              <NoSSR fallback={
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800 mb-3">إجراءات سريعة</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="h-16 bg-gray-200 rounded-lg animate-pulse"></div>
+                    ))}
+                  </div>
+                </div>
+              }>
+                <ActionButtons />
+              </NoSSR>
             </div>
           </div>
         </div>

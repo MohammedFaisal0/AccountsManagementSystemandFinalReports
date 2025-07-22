@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "create-admin": "ts-node scripts/create-admin.ts",
-    "create-default-admin": "ts-node scripts/create-default-admin.ts",
+    "create-default-admin": "tsx scripts/create-default-admin.ts",
+    "check-users": "tsx scripts/check-users.ts",
     "prisma:seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
@@ -36,6 +37,7 @@
     "prisma": "^6.9.0",
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
     "typescript": "^5"
   },
   "prisma": {
