@@ -1,77 +1,77 @@
 # Accounts Management System and Final Reports
 
-A comprehensive full-stack application for managing financial accounts, processing Excel files, and generating reports. Built with Next.js frontend and Python FastAPI backend for Excel processing.
+## Overview
 
-## 🚀 Features
+Accounts Management System and Final Reports is a full-stack web application designed for managing financial accounts, processing and validating Excel files, and generating comprehensive financial reports. The system supports multi-role user management, task assignment, real-time notifications, and hierarchical financial data structures. It features a Next.js frontend and a Python FastAPI backend for advanced Excel processing, with a MySQL database managed via Prisma ORM.
 
-- **User Management**: Multi-role authentication (Administrator, Employee, Reviewer)
-- **File Upload & Processing**: Excel file upload with automated data extraction and validation
-- **Financial Data Management**: Revenue and expense tracking with hierarchical account structures
-- **Reporting**: Comprehensive financial reports and analytics
-- **Task Management**: Assignment and tracking of financial tasks
-- **Notifications**: Real-time notifications for system events
-- **Data Validation**: Automated validation of financial data against predefined rules
+---
 
-## 📋 Prerequisites
+## Features
 
-Before running this application, ensure you have the following installed:
+- **User Management:** Multi-role authentication (Administrator, Employee, Reviewer)
+- **Excel File Upload & Processing:** Automated extraction and validation of financial data from Excel files
+- **Financial Data Management:** Revenue and expense tracking with hierarchical account structures
+- **Reporting:** Generation of detailed financial, validation, and activity reports
+- **Task Management:** Assignment and tracking of financial tasks
+- **Notifications:** Real-time system notifications
+- **Data Validation:** Automated checks against predefined rules
+
+---
+
+## Installation & Setup
+
+### 1. Prerequisites
+
+Ensure you have the following installed:
 
 - **Node.js** (v18 or higher)
+- **npm** (or yarn)
 - **Python** (3.8 or higher)
-- **MySQL** database server (v8.0 or higher)
-- **npm** or **yarn** package manager
+- **MySQL** (v8.0 or higher)
 
-## 🛠️ Installation & Setup
-
-### 1. Clone and Install Dependencies
+### 2. Clone the Repository
 
 ```bash
-# Clone the repository
 git clone <repository-url>
 cd AccountsManagementSystemandFinalReports
+```
 
-# Install Node.js dependencies
+### 3. Install Node.js Dependencies
+
+```bash
 npm install
 ```
 
-### 2. Python Backend Setup
+### 4. Set Up the Python Backend
 
 ```bash
-# Navigate to Python backend directory
 cd python_backend
-
-# Create virtual environment
 python -m venv venv
 
-# Activate virtual environment
+# Activate the virtual environment
 # On Windows:
 venv\Scripts\activate
 # On macOS/Linux:
 source venv/bin/activate
 
 # Install Python dependencies
-pip install fastapi uvicorn python-multipart openpyxl pandas
+pip install -r requirements.txt
 ```
 
-### 3. Environment Configuration
+### 5. Configure Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the project root with the following content:
 
 ```env
-# Database Configuration
 DATABASE_URL="mysql://username:password@localhost:3306/accounts_management"
-
-# Upload Directory (optional, defaults to ./uploads)
-UPLOAD_DIR="./uploads"
-
-# JWT Secret for authentication
+UPLOAD_DIR="./uploads" # Optional, defaults to ./uploads
 JWT_SECRET="your-secure-secret-key-here"
-
-# Python API URL (for Excel processing)
 PYTHON_API_URL="http://localhost:8000"
 ```
 
-### 4. Database Setup
+Replace `username` and `password` with your MySQL credentials.
+
+### 6. Set Up the Database
 
 ```bash
 # Generate Prisma client
@@ -82,291 +82,111 @@ npx prisma migrate dev
 
 # Seed the database with initial data
 npx prisma db seed
+```
 
-# Create default administrator account
+### 7. Create the Default Administrator User
+
+```bash
 npm run create-default-admin
 ```
 
-## 🚀 Running the Application
+---
 
-### 1. Start the Python Backend (Excel Processing API)
+## Running the Application
+
+### 1. Start the Python Backend
 
 ```bash
-# In the python_backend directory with venv activated
 cd python_backend
+# Activate the virtual environment if not already active
+# Windows: venv\Scripts\activate
+# macOS/Linux: source venv/bin/activate
 python Api_for_excels.py
 ```
 
-The Python API will be available at `http://localhost:8000`
+The Python API will be available at [http://localhost:8000](http://localhost:8000)
 
 ### 2. Start the Next.js Frontend
 
 ```bash
-# In the root directory
-npm run dev
+# In the project root
+dnpm run dev
 ```
 
-The application will be available at `http://localhost:3000`
-
-## 👤 Default Login Credentials
-
-After setup, you can log in with the default administrator account:
-
-- **Email**: `admin@system.com`
-- **Password**: `admin123`
-
-**⚠️ Security Note**: Change the default password immediately after first login!
-
-## 📖 Operating Instructions
-
-### User Management
-
-#### Creating New Users
-
-1. Log in as an administrator
-2. Navigate to **Users** section
-3. Click **Add User** button
-4. Fill in user details:
-   - Name
-   - Email (unique)
-   - Password
-   - Phone (optional)
-   - Role (Administrator/Employee/Reviewer)
-5. Click **Save**
-
-#### User Roles and Permissions
-
-- **Administrator**: Full access to all features including user management
-- **Employee**: Can upload files, manage data, create reports (no user management)
-- **Reviewer**: Read-only access to reports, notifications, and tasks
-
-### File Upload and Processing
-
-#### Supported File Formats
-
-- Excel files (`.xlsx`, `.xls`)
-- Specific financial data structure required
-
-#### Upload Process
-
-1. Navigate to **Import File** section
-2. Fill in file metadata:
-   - Select Directorate
-   - Choose Month (1-12)
-   - Enter Year
-   - Select Report Type
-3. Click **Choose File** and select your Excel file
-4. Click **Upload File**
-
-#### File Processing Workflow
-
-1. **Upload**: File is stored in the upload directory
-2. **Validation**: Basic file format and structure validation
-3. **Processing**: Python backend extracts data from Excel sheets
-4. **Data Mapping**: Financial data is mapped to revenue/expense hierarchies
-5. **Validation**: Data is validated against predefined rules
-6. **Storage**: Validated data is stored in the database
-
-#### Excel File Structure Requirements
-
-The system expects Excel files with specific sheet structures:
-
-- **Sheet 1**: Revenue data (Main accounts)
-- **Sheet 2**: Expense data (Use accounts)
-- **Month Mapping**: Each month corresponds to specific sheet indices
-
-### Financial Data Management
-
-#### Revenue Hierarchy
-
-- **Chapters** → **Sections** → **Items** → **Types**
-- Each level has unique codes and names
-- Hierarchical relationship maintained
-
-#### Expense Hierarchy
-
-- **Use Chapters** → **Use Sections** → **Use Items** → **Use Types**
-- Similar structure to revenue hierarchy
-- Separate management for expense tracking
-
-#### Account Types
-
-- **Main Accounts**: Primary financial accounts
-- **Auxiliary Accounts**: Supporting account structures
-
-### Reporting
-
-#### Available Reports
-
-1. **Financial Data Reports**: Detailed financial entries by period
-2. **Validation Reports**: Data validation results and errors
-3. **User Activity Reports**: File upload and processing history
-4. **Directorate Reports**: Financial data by organizational unit
-
-#### Generating Reports
-
-1. Navigate to **Reports** section
-2. Select report type
-3. Choose date range and filters
-4. Click **Generate Report**
-5. Download or view results
-
-### Task Management
-
-#### Creating Tasks
-
-1. Navigate to **Tasks** section
-2. Click **Create Task**
-3. Fill in task details:
-   - Title
-   - Description
-   - Assignee
-   - Due Date
-   - Priority
-4. Click **Save**
-
-#### Task Status Tracking
-
-- **Pending**: Newly created tasks
-- **In Progress**: Tasks being worked on
-- **Completed**: Finished tasks
-- **Overdue**: Past due date
-
-### Notifications
-
-The system provides real-time notifications for:
-
-- File upload completions
-- Data validation results
-- Task assignments
-- System errors
-- User activity
-
-## 🔧 Available Commands
-
-```bash
-# Development
-npm run dev              # Start development server
-npm run build            # Build for production
-npm run start            # Start production server
-npm run lint             # Run ESLint
-
-# Database
-npx prisma generate      # Generate Prisma client
-npx prisma migrate dev   # Run migrations
-npx prisma db seed       # Seed database
-npx prisma studio        # Open database GUI
-
-# User Management
-npm run create-default-admin    # Create default admin user
-npm run create-admin            # Create admin user
-
-# Python Backend
-cd python_backend
-python Api_for_excels.py        # Start Excel processing API
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### Database Connection Errors
-
-```bash
-# Check MySQL service status
-# Windows:
-net start mysql
-# Linux/macOS:
-sudo systemctl start mysql
-
-# Verify connection string in .env
-DATABASE_URL="mysql://username:password@localhost:3306/accounts_management"
-```
-
-#### Python Backend Issues
-
-```bash
-# Ensure virtual environment is activated
-cd python_backend
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/macOS
-
-# Reinstall dependencies
-pip install -r requirements.txt
-```
-
-#### File Upload Problems
-
-```bash
-# Check upload directory permissions
-# Create directory if missing
-mkdir uploads
-
-# Verify environment variable
-UPLOAD_DIR="./uploads"
-```
-
-#### Port Conflicts
-
-```bash
-# Check if ports are in use
-# Windows:
-netstat -ano | findstr :3000
-netstat -ano | findstr :8000
-
-# Linux/macOS:
-lsof -i :3000
-lsof -i :8000
-```
-
-### Error Logs
-
-Check the following locations for error logs:
-
-- **Next.js**: Browser console and terminal output
-- **Python API**: Terminal output in python_backend directory
-- **Database**: MySQL error logs
-
-## 📁 Project Structure
-
-```
-AccountsManagementSystemandFinalReports/
-├── src/                    # Next.js frontend source
-│   ├── app/               # App router pages
-│   ├── components/        # Reusable components
-│   ├── context/          # React context providers
-│   └── lib/              # Utility functions
-├── python_backend/        # Python FastAPI backend
-│   ├── Api_for_excels.py # Main API server
-│   ├── reading_Excel.py  # Excel processing logic
-│   └── temp_uploads/     # Temporary file storage
-├── prisma/               # Database schema and migrations
-├── scripts/              # Utility scripts
-└── public/               # Static assets
-```
-
-## 🔒 Security Considerations
-
-1. **Change Default Password**: Immediately change the default admin password
-2. **Environment Variables**: Keep sensitive data in `.env` files
-3. **Database Security**: Use strong passwords and limit database access
-4. **File Uploads**: Validate file types and scan for malware
-5. **CORS Configuration**: Configure CORS properly for production
-
-## 📞 Support
-
-For technical support or questions:
-
-1. Check the troubleshooting section above
-2. Review error logs in the console
-3. Verify all prerequisites are installed
-4. Ensure environment variables are correctly configured
-
-## 📄 License
-
-This project is proprietary software. All rights reserved.
+The application will be available at [http://localhost:3000](http://localhost:3000)
 
 ---
 
-**Last Updated**: December 2024
-**Version**: 1.0.0
+## Default Login Credentials
+
+After setup, log in with the default administrator account:
+
+- **Email:** admin@system.com
+- **Password:** admin123
+
+**Important:** Change the default password immediately after your first login.
+
+---
+
+## Resetting the Database (After Schema Changes)
+
+If you modify the Prisma schema or want to reset the database:
+
+1. **Drop the existing database:**
+   - You can use a MySQL client or command line:
+     ```sql
+     DROP DATABASE accounts_management;
+     CREATE DATABASE accounts_management;
+     ```
+2. **Re-run migrations and seed:**
+
+```bash
+   npx prisma migrate dev
+   npx prisma db seed
+```
+
+3. **Recreate the default admin user:**
+
+```bash
+   npm run create-default-admin
+```
+
+This will ensure your database is in sync with the latest schema and seeded with initial data.
+
+---
+
+## Project Structure
+
+```
+AccountsManagementSystemandFinalReports/
+├── src/                # Next.js frontend source
+├── python_backend/     # Python FastAPI backend for Excel processing
+├── prisma/             # Database schema and migrations
+├── scripts/            # Utility scripts
+└── public/             # Static assets
+```
+
+---
+
+## Security Notes
+
+- Change the default admin password after first login
+- Keep sensitive data in `.env` files (never commit them)
+- Use strong passwords for your database
+- Validate uploaded files and restrict file types
+
+---
+
+## Troubleshooting
+
+- Ensure MySQL is running and accessible
+- Check `.env` configuration for correct credentials and URLs
+- Activate the Python virtual environment before running the backend
+- For port conflicts, ensure ports 3000 (frontend) and 8000 (backend) are free
+- Review terminal output and logs for error details
+
+---
+
+## License
+
+This project is proprietary software. All rights reserved.

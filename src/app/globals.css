@@ -44,3 +44,8 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+select, select option {
+  color: #111 !important;
+  background: #fff;
+}

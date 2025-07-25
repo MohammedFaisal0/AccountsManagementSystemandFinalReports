@@ -35,6 +35,7 @@ model Directorate {
 
   // Relations
   offices       Office[]
+  accounts      Account[]
 
   @@map("directorates")
 }
@@ -47,6 +48,7 @@ model Office {
   // Relations
   directorate        Directorate            @relation(fields: [directorate_id], references: [directorate_id])
   transactions       Transaction[]
+  accounts          Account[]
 
   @@unique([name, directorate_id])
   @@map("offices")
@@ -107,21 +109,21 @@ model AccountName {
   account_id    Int    @id @default(autoincrement())
   account_name  String @unique
   account_type  String
-  // Relations
-  accounts Account[]
-  @@map("accna")
+  @@map("accounts_name")
 }
 
 model Account {
   account_id    Int      @id @default(autoincrement())
   account_name  String
-  accna_id      Int
   debit         Decimal  @db.Decimal(15, 2)
   credit        Decimal  @db.Decimal(15, 2)
-  date          DateTime @db.Date
+  date          DateTime @db.DateTime
+  office_id     Int
+  directorate_id Int
 
   // Relations
-  accountName   AccountName @relation(fields: [accna_id], references: [account_id])
+  office        Office      @relation(fields: [office_id], references: [office_id])
+  directorate   Directorate @relation(fields: [directorate_id], references: [directorate_id])
 
   @@unique([account_name])
   @@map("accounts")
@@ -132,13 +134,12 @@ model Transaction {
   transaction_id Int       @id @default(autoincrement())
   office_id      Int
   directorate_id Int
-  account_id     Int // 1 for revenue, 2 for use
   type_id        String
   item_id        String
   section_id     String
   chapter_id     String
   amount         Decimal   @db.Decimal(15, 2)
-  date           DateTime  @db.Date
+  date           DateTime  @db.DateTime
 
   // Relations
   office       Office       @relation(fields: [office_id], references: [office_id])

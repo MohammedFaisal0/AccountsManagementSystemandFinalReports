@@ -24,11 +24,7 @@ export default function ActionButtons() {
         </svg>
       ),
       color: 'bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800',
-<<<<<<< HEAD
       show: mounted && hasPermission(PERMISSIONS.CREATE_USERS)
-=======
-      show: hasPermission(PERMISSIONS.CREATE_USERS)
->>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
     },
     {
       label: 'إدارة المستخدمين',

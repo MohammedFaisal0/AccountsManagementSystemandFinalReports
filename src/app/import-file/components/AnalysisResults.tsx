@@ -243,7 +243,6 @@ export default function AnalysisResults({
           </div>
         </div>
       )}
-<<<<<<< HEAD
       {/* عرض اسم العمود للمكتب والمديرية في منتصف الصفحة أعلى النتائج */}
       {(analysisResult.directorate_name || analysisResult.office_name) && (
         <div className="mt-8 mb-6 flex flex-col items-center gap-2">
@@ -259,10 +258,6 @@ export default function AnalysisResults({
           )}
         </div>
       )}
-      {/* احذف عرض اسم المكتب والمديرية بالكامل */}
-=======
-
->>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-4">
         <div className="flex items-center space-x-4 space-x-reverse">
           <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -272,15 +267,9 @@ export default function AnalysisResults({
           </div>
           <div>
             <h2 className="text-lg font-bold text-white mb-1">نتائج التحليل</h2>
-<<<<<<< HEAD
-        
-=======
-            <p className="text-green-100 text-sm">تم تحليل البيانات بنجاح</p>
->>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
           </div>
         </div>
       </div>
-      
       <div className="p-4">
         {pageNumber === 1 && analysisResult.processed_data && (
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
@@ -288,14 +277,12 @@ export default function AnalysisResults({
             {renderHierarchicalTable(analysisResult.processed_data as HierarchicalData)}
           </div>
         )}
-
         {pageNumber === 2 && analysisResult.processed_data && (
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
             <h3 className="text-lg font-bold text-gray-900 mb-4 text-right">بيانات الحسابات المالية</h3>
             {renderAccountsTable(analysisResult.processed_data)}
           </div>
         )}
-        
         <div className="mt-8 flex justify-center space-x-4 space-x-reverse">
           <button
             className={`px-6 py-3 text-white rounded-lg transition-all duration-300 font-bold text-base ${
@@ -319,7 +306,7 @@ export default function AnalysisResults({
                 <svg className="w-4 h-4 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                 </svg>
-                حفظ البيانات
+                حفظ في قاعدة البيانات المحلية
               </>
             )}
           </button>

@@ -12,6 +12,7 @@ import ConfigurationForm from './components/ConfigurationForm';
 import FileUploadSection from './components/FileUploadSection';
 import AnalyzeButton from './components/AnalyzeButton';
 import AnalysisResults from './components/AnalysisResults';
+import { addOperations, addAccounts } from '../operations/localDb/index';
 
 export default function ImportPage() {
   const { user, loading } = useAuth();
@@ -89,15 +90,17 @@ export default function ImportPage() {
       
       // The Python backend returns data in result.data_sent.processed_data
       setSuccessMessage('تم تحليل الملف بنجاح. راجع البيانات أدناه.');
-<<<<<<< HEAD
       setAnalysisResult({
         ...result.data_sent,
         office_name: result.office_name,
         directorate_name: result.directorate_name,
       });
-=======
-      setAnalysisResult(result.data_sent);
->>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
+      // Debug print for analysisResult and hierarchical_rows
+      setTimeout(() => {
+        console.log('analysisResult:', analysisResult);
+        console.log('analysisResult.processed_data:', (analysisResult as Record<string, unknown>)?.processed_data);
+        console.log('analysisResult.processed_data.hierarchical_rows:', (analysisResult as Record<string, unknown>)?.processed_data && (analysisResult as Record<string, any>).processed_data.hierarchical_rows);
+      }, 0);
     } catch (err: unknown) {
       console.error('Error details:', err);
       const errorMessage = err instanceof Error ? err.message : 'حدث خطأ أثناء تحليل الملف في الباكند بايثون.';
@@ -112,6 +115,8 @@ export default function ImportPage() {
     setError(null);
     setSuccessMessage(null);
 
+    console.log('analysisResult:', analysisResult);
+
     if (!analysisResult) {
       setError('لا توجد بيانات لتحويلها إلى قاعدة البيانات.');
       setIsSubmitting(false);
@@ -119,58 +124,85 @@ export default function ImportPage() {
     }
 
     try {
-      const nextJsApiUrl = 'http://localhost:3000/api/data/process';
-<<<<<<< HEAD
-      // معالجة التداخل الزائد في processed_data
-      const processedData = analysisResult.processed_data ? analysisResult.processed_data : analysisResult;
-      const payload: any = {
-        file_name: uploadedFile?.name || 'unknown_file.xlsx',
-        month: String(month),
-        year: String(new Date().getFullYear()),
-        sheet_number_processed: pageNumber,
-        processed_data: processedData
-      };
-      // أضف اسم المديرية والمكتب إذا توفرا
-      if (analysisResult?.directorate_name) {
-        payload.directorate_name = analysisResult.directorate_name;
+      let saved = false;
+      const now = new Date().toISOString();
+      const username = user?.name || user?.email || 'مستخدم مستورد';
+      const directorate_name = (analysisResult as Record<string, any>).directorate_name || '';
+      const office_name = (analysisResult as Record<string, any>).office_name || '';
+      if (pageNumber === 1) {
+        // صفحة العمليات: hierarchical_rows
+        const processedData = (analysisResult as Record<string, any>).processed_data;
+        if (processedData && Array.isArray(processedData.hierarchical_rows)) {
+          if (processedData.hierarchical_rows.length > 0) {
+            console.log('مثال لأول صف من hierarchical_rows:', processedData.hierarchical_rows[0]);
+          }
+          const rows = processedData.hierarchical_rows.map((row: any, idx: number) => ({
+            id: Date.now() + idx,
+            chapter_id: row.chapter_id || '',
+            section_id: row.section_id || '',
+            item_id: row.item_id || '',
+            type_id: row.type_id || '',
+            name: row.name || '',
+            amount: row.value ? Number(row.value) : 0,
+            office_name,
+            directorate_name,
+            date: now,
+            username,
+            operation_type: 'إيرادات واستخدامات',
+          }));
+          addOperations(rows);
+          saved = true;
+        }
+      } else if (pageNumber === 2) {
+        // صفحة الحسابات: processed_data
+        const processedData = (analysisResult as Record<string, any>).processed_data;
+        console.log('pageNumber:', pageNumber, 'processedData:', processedData);
+        if (processedData && typeof processedData === 'object') {
+          // processedData: { مجموعة: { حساب: {debit, credit} } }
+          const accounts: any[] = [];
+          Object.entries(processedData).forEach(([mainKey, subAccounts]: [string, any]) => {
+            if (typeof subAccounts === 'object' && subAccounts !== null) {
+              Object.entries(subAccounts).forEach(([subKey, value]: [string, any], idx) => {
+                // فقط إذا كان value كائن وله debit أو credit (أي حساب فرعي فعلي)
+                if (value && (typeof value.debit !== 'undefined' || typeof value.credit !== 'undefined')) {
+                  const debit = value.debit || 0;
+                  const credit = value.credit || 0;
+                  if (debit > 0 || credit > 0) {
+                    accounts.push({
+                      id: Date.now() + accounts.length,
+                      account_name: `${mainKey} - ${subKey}`,
+                      debit,
+                      credit,
+                      office_name,
+                      directorate_name,
+                      date: now,
+                      username,
+                      operation_type: 'حسابات',
+                    });
+                  }
+                }
+              });
+            }
+          });
+          console.log('الحسابات التي سيتم حفظها:', accounts);
+          addAccounts(accounts);
+          saved = true;
+        } else {
+          console.log('processedData is not an object or is empty');
+        }
       }
-      if (analysisResult?.office_name) {
-        payload.office_name = analysisResult.office_name;
+      if (saved) {
+        setSuccessMessage('تم حفظ البيانات في قاعدة البيانات المحلية بنجاح!');
+        setAnalysisResult(null);
+        setUploadedFile(null);
+        setMonth(null);
+        setPageNumber(null);
+      } else {
+        setError('البيانات غير صالحة للحفظ.');
       }
-=======
-      const payload = {
-        file_name: uploadedFile?.name || 'unknown_file.xlsx',
-        month: String(month),
-        year: String(new Date().getFullYear()),
-        directorate_name: analysisResult.directorate_name,
-        sheet_number_processed: pageNumber,
-        processed_data: analysisResult
-      };
->>>>>>> 26f7151a6157a6da86b03e552ea5e0f359171f6d
-
-      const response = await fetch(nextJsApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'فشل حفظ البيانات في قاعدة البيانات.');
-      }
-
-      setSuccessMessage('تم حفظ البيانات في قاعدة البيانات بنجاح!');
-      setAnalysisResult(null);
-      setUploadedFile(null);
-      setMonth(null);
-      setPageNumber(null);
-
     } catch (err: unknown) {
-      console.error('Error submitting to database:', err);
-      const errorMessage = err instanceof Error ? err.message : 'حدث خطأ أثناء حفظ البيانات في قاعدة البيانات.';
+      console.error('Error saving to local DB:', err);
+      const errorMessage = err instanceof Error ? err.message : 'حدث خطأ أثناء حفظ البيانات محليًا.';
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
